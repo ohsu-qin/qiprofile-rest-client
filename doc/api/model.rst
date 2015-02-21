@@ -25,3 +25,7 @@ model
 :mod:`uom`
 ----------
 .. automodule:: qiprofile_rest_client.model.uom
+
+:mod:`facade`
+-------------
+.. automodule:: qiprofile_rest_client.model.facade
