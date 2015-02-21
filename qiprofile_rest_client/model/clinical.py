@@ -385,8 +385,8 @@ class TNM(Outcome):
             """
             Peforms document-level validation.
 
-            @raise ValidationError if the in_situ flag is set but there is a
-              tumor_size or suffix field
+            :raise ValidationError: if the in_situ flag is set but there
+              is a tumor_size or suffix field
             """
             if self.in_situ:
                 if self.tumor_size != None:
@@ -448,7 +448,10 @@ class Grade(Outcome):
 
 
 class ModifiedBloomRichardsonGrade(Grade):
-    """The ModifiedBloomRichardson breast tumor grade."""
+    """
+    The `Modified Bloom Richardson <http://pathology.jhu.edu/breast/grade.php>`_
+    (a.k.a. Nottingham) breast tumor grade.
+    """
 
     COMPONENT_CHOICES = range(1, 4)
 
