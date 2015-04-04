@@ -12,10 +12,7 @@ from .. import choices
 class Session(mongoengine.EmbeddedDocument):
     """The MR session (a.k.a. *study* in DICOM terminology)."""
 
-    number = fields.IntField(required=True)
-    """The one-based subject session number in date sort order."""
-
-    acquisition_date = fields.DateTimeField()
+    acquisition_date = fields.DateTimeField(required=True)
     """The session image acquisition date."""
 
     modelings = fields.ListField(
@@ -95,11 +92,8 @@ class Region(mongoengine.EmbeddedDocument):
 
 class Volume(mongoengine.EmbeddedDocument):
     """The 3D image volume."""
-    
-    number = fields.IntField(required=True)
-    """The one-based volume number in the image sequence."""
 
-    filename = fields.StringField()
+    filename = fields.StringField(required=True)
     """The image file pathname relative to the web app root."""
 
     average_intensity = fields.FloatField()
@@ -384,6 +378,4 @@ class SessionDetail(mongoengine.Document):
     meta = dict(collection='qiprofile_session_detail')
 
     scans = fields.ListField(field=mongoengine.EmbeddedDocumentField(Scan))
-    """
-    The list of scans.
-    """
+    """The list of scans."""
