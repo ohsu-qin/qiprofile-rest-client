@@ -80,7 +80,7 @@ class TestModel(object):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The session.
         date = datetime(2013, 1, 4, tzinfo=pytz.utc)
-        session = Session(number=1, acquisition_date=date)
+        session = Session(acquisition_date=date)
 
         # Save the subject and embedded session.
         subject.sessions = [session]
@@ -107,7 +107,8 @@ class TestModel(object):
                        result=result)
 
         # Save the subject and embedded session modeling.
-        session = Session(number=1, modelings=[modeling])
+        date = datetime(2014, 3, 1, tzinfo=pytz.utc)
+        session = Session(acquisition_date=date, modelings=[modeling])
         subject.sessions = [session]
         subject.save()
 
@@ -137,8 +138,7 @@ class TestModel(object):
             detail.save()
         
         # The scan volumes.
-        create_volume = lambda number: Volume(filename="volume%d.nii.gz" % number,
-                                              number=number)
+        create_volume = lambda number: Volume(filename="volume%03d.nii.gz" % number)
         scan.volumes = [create_volume(i + 1) for i in range(32)]
         # The bolus arrival is now valid.
         detail.save()
