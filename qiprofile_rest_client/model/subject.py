@@ -59,9 +59,6 @@ class Subject(mongoengine.Document):
         choices=GENDER_CHOICES)
     """The :const:`GENDER_CHOICES` controlled value."""
 
-    weight = fields.IntField()
-    """The integer weight in kilograms."""
-
     sessions = fields.ListField(field=fields.EmbeddedDocumentField(Session))
     """The list of subject sessions."""
 
