@@ -10,6 +10,10 @@ from qiprofile_rest_client.model.imaging import (
 from qiprofile_rest_client.model.clinical import (Encounter, Evaluation, TNM)
 
 class TestModel(object):
+    """
+    Basic data model test. A more complete test is found in the qiprofile_rest
+    server TestSeed test suite.
+    """
     def setup(self):
         connect(db='qiprofile_test')
         self.db = get_db()
