@@ -444,8 +444,6 @@ class Grade(Outcome):
 
     meta = dict(allow_inheritance=True)
 
-    composite_score = fields.IntField(choices=range(1, 4))
-
 
 class ModifiedBloomRichardsonGrade(Grade):
     """
