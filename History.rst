@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.1.4 / 2015-03-07
+------------------
+* The Grade composite score is a computed virtual property.
+
 5.1.3 / 2015-03-07
 ------------------
 * Move subject weight from Subject to Session.
