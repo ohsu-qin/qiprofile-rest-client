@@ -65,7 +65,7 @@ to GitHub. Documentation can be generated locally as follows:
 
 .. _Python: http://www.python.org
 
-.. _QuIP REST Data Model: https://github.com/ohsu-qin/qiprofile-rest-client/doc/quip_data_model.png
+.. _QuIP REST Data Model: http://qiprofile-rest-client.readthedocs.org/en/latest/quip_data_model.pdf
 
 .. _QuIP REST server: http://qiprofile-rest.readthedocs.org/en/latest/
 
