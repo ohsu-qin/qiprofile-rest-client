@@ -58,7 +58,7 @@ class TestModel(object):
 
     def test_encounter(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
-        date = datetime(2013, 1, 4, tzinfo=pytz.utc)
+        date = datetime(2013, 1, 4)
         encounter = Encounter(encounter_type='Biopsy', date=date)
         subject.encounters = [encounter]
         # The encounter outcome is optional.
@@ -83,7 +83,7 @@ class TestModel(object):
         # The session parent.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The session.
-        date = datetime(2013, 1, 4, tzinfo=pytz.utc)
+        date = datetime(2013, 1, 4)
         session = Session(acquisition_date=date)
 
         # Save the subject and embedded session.
@@ -111,7 +111,7 @@ class TestModel(object):
                        result=result)
 
         # Save the subject and embedded session modeling.
-        date = datetime(2014, 3, 1, tzinfo=pytz.utc)
+        date = datetime(2014, 3, 1)
         session = Session(acquisition_date=date, modelings=[modeling])
         subject.sessions = [session]
         subject.save()
