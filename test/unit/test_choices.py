@@ -1,5 +1,5 @@
-from nose.tools import assert_equal
 from qiprofile_rest_client import choices
+from nose.tools import assert_equal
 
 class TestChoices(object):
     def test_roman_range_choices(self):

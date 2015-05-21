@@ -1,8 +1,8 @@
-from nose.tools import (assert_true, assert_false, assert_equal, assert_raises)
 from datetime import datetime
 import pytz
 from mongoengine import (connect, ValidationError)
 from mongoengine.connection import get_db
+from nose.tools import (assert_true, assert_false, assert_equal, assert_raises)
 from qiprofile_rest_client.model.subject import Subject
 from qiprofile_rest_client.model.imaging import (
   Session, Scan, ScanProtocol, Registration, RegistrationProtocol, LabelMap,
