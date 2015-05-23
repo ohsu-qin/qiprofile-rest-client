@@ -21,7 +21,7 @@ class Treatment(mongoengine.EmbeddedDocument):
         max_length=choices.max_length(TYPE_CHOICES),
         choices=TYPE_CHOICES)
 
-    begin_date = fields.DateTimeField(required=True)
+    start_date = fields.DateTimeField(required=True)
 
     end_date = fields.DateTimeField(required=True)
 
@@ -37,11 +37,11 @@ class Dosage(mongoengine.EmbeddedDocument):
 
     amount = fields.EmbeddedDocumentField(Measurement, required=True)
 
-    start = fields.DateTimeField()
+    start_date = fields.DateTimeField()
 
     times_per_day = fields.IntField()
 
-    days = fields.IntField()
+    duration = fields.IntField()
 
 
 class Agent(mongoengine.EmbeddedDocument):
