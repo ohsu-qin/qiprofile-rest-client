@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.2.2 / 2015-05-26
+------------------
+* Rename the SarcomaPathology necrosis_pct field to necrosis_percent.
+
 5.2.1 / 2015-05-22
 ------------------
 * Change Treatment begin_date to start_date and Dosage days
