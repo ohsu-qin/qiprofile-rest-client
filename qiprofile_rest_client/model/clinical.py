@@ -232,7 +232,7 @@ class SarcomaPathology(Pathology):
 
     location = fields.StringField()
 
-    necrosis_pct = fields.EmbeddedDocumentField('NecrosisPercent')
+    necrosis_percent = fields.EmbeddedDocumentField('NecrosisPercent')
 
     histology = fields.StringField()
 
@@ -486,9 +486,55 @@ class FNCLCCGrade(Grade):
     necrosis = fields.IntField(choices=range(0, 3))
 
 
+def necrosis_percent_as_score(necrosis_percent):
+    """
+    Calculates the necrosis score from the necrosis percent
+    according to the
+    `Stanford Synovial Sarcoma Guideline<http://surgpathcriteria.stanford.edu/softmisc/synovial_sarcoma/grading.html>`
+    as follows:
+    * If the percent is None, then None
+    * Otherwise, if the percent is 0, then 0
+    * Otherwise, if the percent is less than 50, then 1
+    * Otherwise, 2
+    
+    :param necrosis_percent: the integer percent,
+        :class:`NecrosisPercentValue` or  :class:`NecrosisPercentRange`
+    :return: the necrosis score
+    """
+    if necrosis_percent == None:
+        return None
+    # Wrap a simple integer as a trivial range.
+    if isinstance(necrosis_percent, int):
+        necrosis_range = NecrosisPercentRange(
+            start=NecrosisPercentRange.LowerBound(value=necrosis_percent),
+            stop=NecrosisPercentRange.UpperBound(value=necrosis_percent + 1)
+        )
+    # Convert a value to a trivial range for convenience.
+    elif isinstance(necrosis_percent, NecrosisPercentValue):
+        necrosis_range = NecrosisPercentRange(
+            start=NecrosisPercentRange.LowerBound(value=necrosis_percent.value),
+            stop=NecrosisPercentRange.UpperBound(value=necrosis_percent.value + 1)
+        )
+    elif isinstance(necrosis_percent, NecrosisPercentRange):
+        necrosis_range = necrosis_percent
+    else:
+        raise ValidationError("Necrosis percent type is not supported: %s" %
+                              necrosis_percent.__class__)
+    if necrosis_range.stop.value == 1:
+        return 0
+    elif necrosis_range.stop.value <= 50:
+        return 1
+    elif necrosis_range.start.value >= 50:
+        return 2
+    else:
+        raise ValidationError("The necrosis percent score cannot be"
+                              " determined from the range" % necrosis_range)
+
+
 class NecrosisPercent(Outcome):
     """The necrosis percent value or range."""
-    pass
+
+    meta = dict(allow_inheritance=True)
 
 
 class NecrosisPercentValue(NecrosisPercent):
@@ -526,3 +572,6 @@ class NecrosisPercentRange(NecrosisPercent):
     start = fields.EmbeddedDocumentField(LowerBound)
 
     stop = fields.EmbeddedDocumentField(UpperBound)
+    
+    def __repr__(self):
+        return "%d-%d" % (self.start, self.stop)
