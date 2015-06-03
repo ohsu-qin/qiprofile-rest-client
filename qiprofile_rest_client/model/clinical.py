@@ -138,14 +138,6 @@ class Pathology(Evaluation):
     tnm = fields.EmbeddedDocumentField('TNM')
 
 
-class BreastReceptorStatus(mongoengine.EmbeddedDocument):
-    """The breast patient hormone receptor results."""
-    
-    estrogen = fields.EmbeddedDocumentField('HormoneReceptorStatus')
-
-    progesterone = fields.EmbeddedDocumentField('HormoneReceptorStatus')
-
-
 class BreastGeneticExpression(mongoengine.EmbeddedDocument):
     """The breast patient genetic expression results."""
 
@@ -168,7 +160,9 @@ class BreastGeneticExpression(mongoengine.EmbeddedDocument):
 class BreastPathology(Pathology):
     """The QIN breast patient pathology summary."""
 
-    hormone_receptors = fields.EmbeddedDocumentField('BreastReceptorStatus')
+    hormone_receptors = fields.ListField(
+        field=mongoengine.EmbeddedDocumentField('HormoneReceptorStatus')
+    )
 
     genetic_expression = fields.EmbeddedDocumentField('BreastGeneticExpression')
 
@@ -502,6 +496,7 @@ def necrosis_percent_as_score(necrosis_percent):
     :param necrosis_percent: the integer percent,
         :class:`NecrosisPercentValue` or  :class:`NecrosisPercentRange`
     :return: the necrosis score
+    :raise ValidationError: if the percent is a range that spans 50%
     """
     if necrosis_percent == None:
         return None
@@ -546,7 +541,15 @@ class NecrosisPercentValue(NecrosisPercent):
 
 
 class NecrosisPercentRange(NecrosisPercent):
-    """The necrosis percent range."""
+    """
+    The necrosis percent range.
+    
+    :Note: it is recommended, although not required, that the percent
+        range is a decile range, e.g. [20-30].
+    
+    :Note: A range which spans 50%, e.g. [40-60], results in a
+        :meth:`necrosis_percent_as_score` ValidationError.
+    """
 
     class Bound(mongoengine.EmbeddedDocument):
         """
