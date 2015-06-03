@@ -1,9 +1,13 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.2.2 / 2015-06-03
+------------------
+* Move weight from session to encounter.
+
 5.2.2 / 2015-05-26
 ------------------
-* Rename the SarcomaPathology necrosis_pct field to necrosis_percent.
+* Rename necrosis_pct field to necrosis_percent.
 
 5.2.1 / 2015-05-22
 ------------------

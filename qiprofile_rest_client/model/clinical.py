@@ -80,6 +80,9 @@ class Encounter(mongoengine.EmbeddedDocument):
 
     date = fields.DateTimeField(required=True)
 
+    weight = fields.IntField()
+    """The integer weight in kilograms."""
+
 
 class Biopsy(Encounter):
     """Non-therapeutic tissue extraction resulting in a pathology report."""
@@ -98,8 +101,7 @@ class Surgery(Encounter):
 class Assessment(Encounter):
     """Generic collection of outcomes."""
 
-    evaluation = fields.EmbeddedDocumentField('GenericEvaluation',
-                                              required=True)
+    evaluation = fields.EmbeddedDocumentField('GenericEvaluation')
 
 
 class BreastSurgery(Surgery):
@@ -225,16 +227,16 @@ class SarcomaPathology(Pathology):
                          'Leiomyosarcoma', 'Liposarcoma', 'MFH', 'MPNST',
                          'Osteosarcoma', 'Rhabdomyosarcoma', 'Synovial', 'Other')
     """
-    The advisory histololgy list. The client should constraion the histology
+    The advisory histololgy list. The client should constrain the histology
     choices to this list where possible, but allow for free-form text where
     necessary.
     """
 
     location = fields.StringField()
 
-    necrosis_percent = fields.EmbeddedDocumentField('NecrosisPercent')
-
     histology = fields.StringField()
+
+    necrosis_percent = fields.EmbeddedDocumentField('NecrosisPercent')
 
 
 ## Clinical metrics ##

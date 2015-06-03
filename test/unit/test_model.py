@@ -61,20 +61,27 @@ class TestModel(object):
         with assert_raises(ValidationError):
             subject.save()
     
-    def test_encounter(self):
+    def test_biopsy(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
+        # The pathology.
+        size = TNM.Size.parse('T3a')
+        grade = ModifiedBloomRichardsonGrade(
+            tubular_formation=2, nuclear_pleomorphism=1, mitotic_count=2
+        )
+        tnm = TNM(tumor_type='Breast', grade=grade, size=size,
+                  metastasis=False, resection_boundaries=1,
+                  lymphatic_vessel_invasion=False)
+        hormone_receptors = BreastReceptorStatus(
+            estrogen=HormoneReceptorStatus(hormone='estrogen', positive=True,
+                                           intensity=80)
+        )
+        pathology = BreastPathology(tnm=tnm,
+                                    hormone_receptors=hormone_receptors)
+        # Add the encounter to the subject.
         date = datetime(2013, 1, 4)
-        encounter = Encounter(encounter_type='Biopsy', date=date)
-        subject.encounters = [encounter]
-        # The encounter outcome is optional.
-        subject.save()
-    
-        # Add the evaluation.
-        evaluation = Evaluation()
-        outcome = TNM()
-        evaluation.outcomes = [outcome]
-        encounter.evaluation = evaluation
-        # Save the subject and embedded encounter.
+        biopsy = Biopsy(date=date, weight=54, pathology=pathology)
+        subject.encounters = [biopsy]
+        # Save the subject and embedded biopsy.
         subject.save()
     
     def test_tnm_size(self):

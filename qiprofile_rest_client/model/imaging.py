@@ -15,9 +15,6 @@ class Session(mongoengine.EmbeddedDocument):
     acquisition_date = fields.DateTimeField(required=True)
     """The session image acquisition date."""
 
-    subject_weight = fields.IntField()
-    """The integer weight in kilograms."""
-
     modelings = fields.ListField(
         field=fields.EmbeddedDocumentField('Modeling')
     )
