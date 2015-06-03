@@ -51,9 +51,6 @@ to GitHub. Documentation can be generated locally as follows:
 
 .. container:: copyright
 
-  Copyright (C) 2015 Oregon Health & Science University `Knight Cancer Institute`_.
-  All rights reserved.
-
 
 .. Targets:
 
