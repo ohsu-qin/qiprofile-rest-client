@@ -1,7 +1,7 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
-5.2.2 / 2015-06-03
+5.3.1 / 2015-06-03
 ------------------
 * Move weight from session to encounter.
 
