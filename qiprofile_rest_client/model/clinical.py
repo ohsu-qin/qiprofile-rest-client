@@ -154,7 +154,7 @@ class BreastGeneticExpression(mongoengine.EmbeddedDocument):
 
     ki67 = KI67Field()
 
-    normalized_assay = fields.EmbeddedDocumentField('NormalizedAssay')
+    normalized_assay = fields.EmbeddedDocumentField('BreastNormalizedAssay')
 
 
 class BreastPathology(Pathology):
@@ -167,42 +167,42 @@ class BreastPathology(Pathology):
     genetic_expression = fields.EmbeddedDocumentField('BreastGeneticExpression')
 
 
-class NormalizedAssayField(fields.IntField):
+class BreastNormalizedAssayField(fields.IntField):
     """The normalized Breast genomics result in the inclusive range [0, 15]."""
 
     def validate(self, value, clean=True):
         return value > 0 and value <= 15
 
 
-class NormalizedAssay(mongoengine.EmbeddedDocument):
+class BreastNormalizedAssay(mongoengine.EmbeddedDocument):
     """The Breast genomics panel normalized to reference genes."""
 
     class HER2(mongoengine.EmbeddedDocument):
-        grb7 = NormalizedAssayField()
-        her2 = NormalizedAssayField()
+        grb7 = BreastNormalizedAssayField()
+        her2 = BreastNormalizedAssayField()
 
     class Estrogen(mongoengine.EmbeddedDocument):
-        er = NormalizedAssayField()
-        pgr = NormalizedAssayField()
-        bcl2 = NormalizedAssayField()
-        scube2 = NormalizedAssayField()
+        er = BreastNormalizedAssayField()
+        pgr = BreastNormalizedAssayField()
+        bcl2 = BreastNormalizedAssayField()
+        scube2 = BreastNormalizedAssayField()
 
     class Proliferation(mongoengine.EmbeddedDocument):
-        ki67 = NormalizedAssayField()
-        stk15 = NormalizedAssayField()
-        survivin = NormalizedAssayField()
-        ccnb1 = NormalizedAssayField()
-        mybl2 = NormalizedAssayField()
+        ki67 = BreastNormalizedAssayField()
+        stk15 = BreastNormalizedAssayField()
+        survivin = BreastNormalizedAssayField()
+        ccnb1 = BreastNormalizedAssayField()
+        mybl2 = BreastNormalizedAssayField()
 
     class Invasion(mongoengine.EmbeddedDocument):
-        mmp11 = NormalizedAssayField()
-        ctsl2 = NormalizedAssayField()
+        mmp11 = BreastNormalizedAssayField()
+        ctsl2 = BreastNormalizedAssayField()
 
-    gstm1 = NormalizedAssayField()
+    gstm1 = BreastNormalizedAssayField()
 
-    cd68 = NormalizedAssayField()
+    cd68 = BreastNormalizedAssayField()
 
-    bag1 = NormalizedAssayField()
+    bag1 = BreastNormalizedAssayField()
 
     her2 = fields.EmbeddedDocumentField(HER2)
 
