@@ -375,6 +375,10 @@ class TNM(Outcome):
             :return: the new Size object
             """
             match = klass.SIZE_REGEX.match(value)
+            if not match:
+                raise ValidationError("TNM Size value is not supported: %s" %
+                                      value)
+
             return klass(**match.groupdict())
 
         def clean(self):
