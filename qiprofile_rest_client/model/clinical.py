@@ -301,15 +301,30 @@ class TNM(Outcome):
         )
 
         SIZE_PAT = """
-            ^(?P<prefix>c|p|y|r|a|u)?   # The prefix modifier
-            T                           # The size designator
-            (x |                        # Tumor cannot be evaluated
+            ^(
+             (?P<prefix>c|p|y|r|a|u)?   # The prefix modifier
+             T)?                        # The size designator
+            (x |                        # Size cannot be evaluated
              (?P<in_situ>is) |          # Carcinoma in situ
              ((?P<tumor_size>0|1|2|3|4) # The size
               (?P<suffix>a|b|c)?        # The suffix modifier
              )
             )$
         """
+        """
+        The tumor size pattern.
+        
+        Examples:
+        * ``T3``
+        * ``pT2`` - pathology prefix
+        * ``T3a`` - ``a``, ``b`` or ``c`` suffix modifier is allowed
+        * ``3a`` - ``T`` prefix is optional for the size alone
+        * ``Tx`` - tumor size cannot be evaluated
+        * ``Tis`` - in situ
+        """
+
+        SIZE_REGEX = re.compile(SIZE_PAT, re.VERBOSE)
+        """The :const:`SIZE_PAT` pattern regular expression."""
 
         @staticmethod
         def tumor_size_choices(tumor_type=None):
@@ -332,9 +347,6 @@ class TNM(Outcome):
                 tumor_type = 'Any'
 
             return TNM.Size.SUFFIX_CHOICES[tumor_type]
-
-        SIZE_REGEX = re.compile(SIZE_PAT, re.VERBOSE)
-        """The TNM size validation regular expression."""
 
         prefix = fields.StringField(choices=PREFIXES)
 
@@ -369,12 +381,18 @@ class TNM(Outcome):
         @classmethod
         def parse(klass, value):
             """
-            Parses the given string into a new Size.
+            Parses the given string into a new Size. The size must match
+            the :const:`SIZE_REGEX`.
 
             :param value: the input string
             :return: the new Size object
+            :raise ValidationError: it the size value is not supported
             """
-            match = klass.SIZE_REGEX.match(value)
+            try:
+                match = klass.SIZE_REGEX.match(value)
+            except TypeError:
+                raise ValidationError("Invalid TNM size value type: %s (%s)" %
+                                      (value, value.__class__))
             if not match:
                 raise ValidationError("TNM Size value is not supported: %s" %
                                       value)
