@@ -6,8 +6,9 @@ import re
 import mongoengine
 from mongoengine import (fields, signals)
 from .. import choices
+from .encounter import Encounter
 from .imaging import (Scan, Session)
-from .clinical import (Treatment, Encounter)
+from .clinical import Treatment
 
 
 class Subject(mongoengine.Document):
@@ -59,20 +60,36 @@ class Subject(mongoengine.Document):
         choices=GENDER_CHOICES)
     """The :const:`GENDER_CHOICES` controlled value."""
 
-    sessions = fields.ListField(field=fields.EmbeddedDocumentField(Session))
-    """The list of subject sessions."""
-
     treatments = fields.ListField(field=fields.EmbeddedDocumentField(Treatment))
     """The list of subject treatments."""
 
     encounters = fields.ListField(field=fields.EmbeddedDocumentField(Encounter))
     """The list of subject encounters."""
 
+    @property
+    def sessions(self):
+        """
+        :return: the :class:`qiprofile_rest_client.imaging.Session`
+            encounters
+        """
+        return (enc for enc in self.encounters if self._is_session(enc))
+
+    @property
+    def clinical_encounters(self):
+        """
+        :return: the non-:class:`qiprofile_rest_client.imaging.Session`
+            encounters
+        """
+        return (enc for enc in self.encounters if not self._is_session(enc))
+
     def pre_delete(cls, sender, document, **kwargs):
         """Cascade delete the subject's sessions."""
 
         for sess in self.sessions:
             sess.delete()
+
+    def _is_session(self, encounter):
+        return isinstance(encounter, Session)
 
     def __str__(self):
         return ("%s %s Subject %d" %

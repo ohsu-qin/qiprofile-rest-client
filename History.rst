@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.4.1 / 2015-06-08
+------------------
+* A MR session is an encounter.
+
 5.3.1 / 2015-06-03
 ------------------
 * Move weight from session to encounter.

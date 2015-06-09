@@ -8,12 +8,10 @@ from numbers import Number
 import mongoengine
 from mongoengine import (fields, signals, ValidationError)
 from .. import choices
+from .encounter import Encounter
 
-class Session(mongoengine.EmbeddedDocument):
+class Session(Encounter):
     """The MR session (a.k.a. *study* in DICOM terminology)."""
-
-    acquisition_date = fields.DateTimeField(required=True)
-    """The session image acquisition date."""
 
     modelings = fields.ListField(
         field=fields.EmbeddedDocumentField('Modeling')
