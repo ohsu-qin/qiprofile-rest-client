@@ -6,6 +6,7 @@ import re
 import mongoengine
 from mongoengine import (fields, ValidationError)
 from .. import choices
+from .encounter import Encounter
 from .uom import Measurement
 
 POS_NEG_CHOICES = [(True, 'Positive'), (False, 'Negative')]
@@ -13,7 +14,12 @@ POS_NEG_CHOICES = [(True, 'Positive'), (False, 'Negative')]
 
 
 class Treatment(mongoengine.EmbeddedDocument):
-    """The patient therapy, e.g. adjuvant."""
+    """
+    The patient therapy, e.g. adjuvant. Treatment is one of
+    the :const:`Treatment.TYPE_CHOICES` types, and occurs over
+    a period of time. The treatment consists of dosages, which
+    may be pharmocological or radiological.
+    """
 
     TYPE_CHOICES = ('Neoadjuvant', 'Primary', 'Adjuvant')
 
@@ -71,17 +77,6 @@ class Radiation(Agent):
 class OtherAgent(Agent):
 
     name = fields.StringField(required=True)
-
-
-class Encounter(mongoengine.EmbeddedDocument):
-    """The patient clinical encounter, e.g. biopsy."""
-
-    meta = dict(allow_inheritance=True)
-
-    date = fields.DateTimeField(required=True)
-
-    weight = fields.IntField()
-    """The integer weight in kilograms."""
 
 
 class Biopsy(Encounter):
@@ -382,21 +377,18 @@ class TNM(Outcome):
         def parse(klass, value):
             """
             Parses the given string into a new Size. The size must match
-            the :const:`SIZE_REGEX`.
+            the :const:`SIZE_REGEX` regular expression.
 
             :param value: the input string
             :return: the new Size object
-            :raise ValidationError: it the size value is not supported
+            :raise ValidationError: it the size value string does not
+                match :const:`SIZE_REGEX`
             """
-            try:
-                match = klass.SIZE_REGEX.match(value)
-            except TypeError:
-                raise ValidationError("Invalid TNM size value type: %s (%s)" %
-                                      (value, value.__class__))
+            match = klass.SIZE_REGEX.match(value)
             if not match:
-                raise ValidationError("TNM Size value is not supported: %s" %
-                                      value)
-
+                raise ValidationError("TNM Size value is not supported:"
+                                      " %s" % value)
+            
             return klass(**match.groupdict())
 
         def clean(self):

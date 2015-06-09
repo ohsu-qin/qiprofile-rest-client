@@ -122,10 +122,10 @@ class TestModel(object):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The session.
         date = datetime(2013, 1, 4)
-        session = Session(acquisition_date=date)
+        session = Session(date=date)
 
         # Save the subject and embedded session.
-        subject.sessions = [session]
+        subject.encounters = [session]
         subject.save()
 
     def test_modeling(self):
@@ -150,8 +150,8 @@ class TestModel(object):
 
         # Save the subject and embedded session modeling.
         date = datetime(2014, 3, 1)
-        session = Session(acquisition_date=date, modelings=[modeling])
-        subject.sessions = [session]
+        session = Session(date=date, modelings=[modeling])
+        subject.encounters = [session]
         subject.save()
 
     def test_scan(self):
