@@ -1,5 +1,4 @@
 from datetime import datetime
-import pytz
 from mongoengine import (connect, ValidationError)
 from mongoengine.connection import get_db
 from nose.tools import (assert_true, assert_false, assert_equal, assert_raises)

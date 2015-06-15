@@ -1,9 +1,13 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
-5.4.1 / 2015-06-08
+5.4.2 / 2015-06-15
 ------------------
-* A MR session is an encounter.
+* Rename Radiation and BreastSurgery fields.
+
+5.4.1 / 2015-06-09
+------------------
+* Session is an encounter.
 
 5.3.1 / 2015-06-03
 ------------------

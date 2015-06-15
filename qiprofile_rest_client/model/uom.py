@@ -1,5 +1,9 @@
 """
-The qiprofile unit of measurement Mongodb data model.
+The qiprofile unit of measurement MongoDB data model.
+
+This uom module is an advisory module for quantity display and
+conversion. Quantities are always stored in a canonical unit
+documented in the field.
 """
 
 import decimal
@@ -24,24 +28,11 @@ class Measurement(mongoengine.EmbeddedDocument):
         from decimal import Decimal
         Measurement(amount=Decimal(0.006), unit=Weight())
 
-    :Note: the client is responsible for saving the measurement amount
-      in unscaled units and converting the database amount to the preferred
-      unit. For example, 40mg is saved as follows::
+    The measurement unit can be qualified by a second ``per_unit``
+    dimension, e.g. 2 mg/kg dosage per patient weight is expressed
+    as::
 
-          Measurement(amount=0.04, unit=Volume())
-
-      which is equivalent to::
-
-          Measurement(amount=0.04, unit=Volume(scale='m'))
-
-      When this measurement is read from the database, the client then
-      converts the measurement to the preferred display value ``40mg``.
-
-      The measurement unit can be qualified by a second ``per_unit``
-      dimension, e.g. 2 mg/kg dosage per patient weight is expressed
-      as::
-
-          Measurement(amount=0.002, unit=Weight(), per_unit=Weight(scale='k'))
+        Measurement(amount=0.002, unit=Weight(), per_unit=Weight(scale='k'))
 
     :Note: the amount is a :class:`Decimal` embedded object rather than
       the broken MongoEngine ``DecimalField`` (see the :class:`Decimal`
@@ -227,12 +218,7 @@ class Volume(Unit):
 
 
 class Radiation(Unit):
-
-    SCALES = [None, 'c']
-    """The preferred radiation scale factor is 1."""
+    """The radiation unit is always an unscaled Gray."""
 
     BASE = 'Gy'
     """The Gray designator."""
-
-    scale = fields.StringField()
-    """The default radiation is an unscaled Gray."""
