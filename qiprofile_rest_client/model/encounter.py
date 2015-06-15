@@ -7,11 +7,12 @@ from mongoengine import (fields, ValidationError)
 
 
 class Encounter(mongoengine.EmbeddedDocument):
-    """The patient clinical encounter, e.g. biopsy."""
+    """The patient clinical encounter, e.g. biopsy or imaging session."""
 
     meta = dict(allow_inheritance=True)
 
     date = fields.DateTimeField(required=True)
+    """The encounter date."""
 
     weight = fields.IntField()
-    """The integer weight in kilograms."""
+    """The patient weight in kilograms."""

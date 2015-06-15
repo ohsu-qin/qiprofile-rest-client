@@ -7,7 +7,6 @@ import mongoengine
 from mongoengine import (fields, ValidationError)
 from .. import choices
 from .encounter import Encounter
-from .uom import Measurement
 
 POS_NEG_CHOICES = [(True, 'Positive'), (False, 'Negative')]
 """The Boolean choices for Positive or Negative status."""
@@ -40,14 +39,27 @@ class Dosage(mongoengine.EmbeddedDocument):
     """The agent dosage."""
 
     agent = fields.EmbeddedDocumentField('Agent', required=True)
+    """The administered Drug or Radiation."""
 
-    amount = fields.EmbeddedDocumentField(Measurement, required=True)
+    amount = fields.IntField(required=True)
+    """
+    The amount administered.
+    
+    For chemotherapy, this field is the amount in milligrams per
+    day over the duration. Thus, the total drug dosage amount is
+    the amount * duration.
+    
+    For radiotherapy, this field is the cumulative amount over
+    the duration in Greys. Radiation fractions are not tracked.
+    """
 
     start_date = fields.DateTimeField()
-
-    times_per_day = fields.IntField()
+    """The first date the agent is administered."""
 
     duration = fields.IntField()
+    """
+    The span in days during which the agent is administered.
+    """
 
 
 class Agent(mongoengine.EmbeddedDocument):
@@ -64,14 +76,12 @@ class Drug(Agent):
 
 class Radiation(Agent):
 
-    FORMS = ['photon', 'proton', 'electron', 'neutron', 'carbon ion', 'radiopharmaceutical']
+    BEAM_TYPES = ['photon', 'proton', 'electron', 'neutron', 'carbon']
     """
-    The advisory radiation forms list. The client should constraion the radiation
-    form choices to this list where possible, but allow for free-form text where
-    necessary.
+    The radiation beam type controlled values.
     """
 
-    form = fields.StringField()
+    beam_type = fields.StringField()
 
 
 class OtherAgent(Agent):
@@ -110,7 +120,7 @@ class BreastSurgery(Surgery):
 
     surgery_type = fields.StringField()
 
-    partial = fields.BooleanField(default=False)
+    is_partial = fields.BooleanField(default=False)
 
 
 class Evaluation(mongoengine.EmbeddedDocument):
