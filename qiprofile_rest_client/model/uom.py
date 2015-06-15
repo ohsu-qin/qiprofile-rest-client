@@ -1,5 +1,9 @@
 """
-The qiprofile unit of measurement Mongodb data model.
+The qiprofile unit of measurement MongoDB data model.
+
+This uom module is an advisory module for quantity display and
+conversion. Quantities are always stored in a canonical unit
+documented in the field.
 """
 
 import decimal
@@ -227,12 +231,7 @@ class Volume(Unit):
 
 
 class Radiation(Unit):
-
-    SCALES = [None, 'c']
-    """The preferred radiation scale factor is 1."""
+    """The radiation unit is always an unscaled Gray."""
 
     BASE = 'Gy'
     """The Gray designator."""
-
-    scale = fields.StringField()
-    """The default radiation is an unscaled Gray."""
