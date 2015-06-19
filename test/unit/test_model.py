@@ -112,9 +112,13 @@ class TestModel(object):
         for expected, inputs in fixture.iteritems():
             for in_type, in_val in inputs.iteritems():
                 actual = necrosis_percent_as_score(in_val)
-                assert_equal(actual, expected, "The necrosis score for %s"
-                                               "is incorrect: %d" %
-                                               (actual, expected))
+                assert_equal(actual, expected,
+                             "The necrosis score for %s is incorrect: %d" %
+                             (in_val, expected))
+
+    def test_treatment(self):
+       # TODO - add the treatment test case.
+       pass
 
     def test_session(self):
         # The session parent.

@@ -41,16 +41,17 @@ class Dosage(mongoengine.EmbeddedDocument):
     agent = fields.EmbeddedDocumentField('Agent', required=True)
     """The administered Drug or Radiation."""
 
-    amount = fields.IntField(required=True)
+    amount = fields.FloatField(required=True)
     """
-    The amount administered.
+    The cumulative amount of the agent administered over the
+    course of the duration, normalized by weight.
     
-    For chemotherapy, this field is the amount in milligrams per
-    day over the duration. Thus, the total drug dosage amount is
-    the amount * duration.
+    For chemotherapy, the field unit is milligrams per kilogram
+    (mg/kg).
     
-    For radiotherapy, this field is the cumulative amount over
-    the duration in Greys. Radiation fractions are not tracked.
+    For radiotherapy, the field unit is Greys per kilogram (Gy/kg).
+    
+    Radiation fractions and daily chemotherapy dosages are not tracked.
     """
 
     start_date = fields.DateTimeField()
@@ -503,7 +504,7 @@ class FNCLCCGrade(Grade):
 
     mitotic_count = fields.IntField(choices=range(1, 4))
 
-    necrosis = fields.IntField(choices=range(0, 3))
+    necrosis_score = fields.IntField(choices=range(0, 3))
 
 
 def necrosis_percent_as_score(necrosis_percent):
