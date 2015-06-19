@@ -109,9 +109,7 @@ class LabelMap(mongoengine.EmbeddedDocument):
 
 
 class ImageSequence(mongoengine.EmbeddedDocument):
-    """
-    The scan or registration image volume container.
-    """
+    """The scan or registration image volume container."""
 
     meta = dict(allow_inheritance=True)
     
@@ -119,9 +117,7 @@ class ImageSequence(mongoengine.EmbeddedDocument):
     """The 3D volume images in the sequence."""
 
 class RegistrationProtocol(mongoengine.Document):
-    """
-    The registration settings.
-    """
+    """The registration settings."""
 
     meta = dict(collection='qiprofile_registration_protocol')
 
