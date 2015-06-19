@@ -1,6 +1,11 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.4.3 / 2015-06-18
+------------------
+* Dosage amount is a cumulative normalized float.
+* Rename Sarcoma grade necrosis to necrosis_score.
+
 5.4.2 / 2015-06-15
 ------------------
 * Rename Radiation and BreastSurgery fields.
