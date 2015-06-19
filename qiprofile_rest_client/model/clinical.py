@@ -9,8 +9,10 @@ from .. import choices
 from .encounter import Encounter
 
 POS_NEG_CHOICES = [(True, 'Positive'), (False, 'Negative')]
-"""The Boolean choices for Positive or Negative status."""
+"""The Boolean choices for Positive/Negative display values."""
 
+YES_NO_CHOICES = [(True, 'Yes'), (False, 'No')]
+"""The Boolean choices for Yes/No display values."""
 
 class Treatment(mongoengine.EmbeddedDocument):
     """
@@ -152,7 +154,7 @@ class BreastGeneticExpression(mongoengine.EmbeddedDocument):
 
     class KI67Field(fields.IntField):
         def validate(self, value, clean=True):
-            return value > 0 and value <= 100
+            return value >= 0 and value <= 100
 
     her2_neu_ihc = fields.IntField(choices=HER2_NEU_IHC_CHOICES)
 
@@ -490,7 +492,7 @@ class HormoneReceptorStatus(Outcome):
 
     hormone = fields.StringField(required=True)
 
-    positive = fields.BooleanField(choices=POS_NEG_CHOICES)
+    positive = fields.BooleanField(choices=YES_NO_CHOICES)
 
     quick_score = fields.IntField(choices=range(0, 9))
 
