@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.4.4 / 2015-06-19
+------------------
+Allow a KI67 value of zero.
+
 5.4.3 / 2015-06-18
 ------------------
 * Dosage amount is a cumulative normalized float.
