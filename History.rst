@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.4.5 / 2015-06-23
+------------------
+Expand the breast surgery type and subject gender CVs.
+
 5.4.4 / 2015-06-19
 ------------------
 Allow a KI67 value of zero.
