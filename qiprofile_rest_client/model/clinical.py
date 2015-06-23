@@ -14,6 +14,7 @@ POS_NEG_CHOICES = [(True, 'Positive'), (False, 'Negative')]
 YES_NO_CHOICES = [(True, 'Yes'), (False, 'No')]
 """The Boolean choices for Yes/No display values."""
 
+
 class Treatment(mongoengine.EmbeddedDocument):
     """
     The patient therapy, e.g. adjuvant. Treatment is one of
@@ -24,9 +25,7 @@ class Treatment(mongoengine.EmbeddedDocument):
 
     TYPE_CHOICES = ('Neoadjuvant', 'Primary', 'Adjuvant')
 
-    treatment_type = fields.StringField(
-        max_length=choices.max_length(TYPE_CHOICES),
-        choices=TYPE_CHOICES)
+    treatment_type = fields.StringField(choices=TYPE_CHOICES)
 
     start_date = fields.DateTimeField(required=True)
 
@@ -84,7 +83,7 @@ class Radiation(Agent):
     The radiation beam type controlled values.
     """
 
-    beam_type = fields.StringField()
+    beam_type = fields.StringField(choices=BEAM_TYPES)
 
 
 class OtherAgent(Agent):
@@ -115,15 +114,10 @@ class Assessment(Encounter):
 class BreastSurgery(Surgery):
     """Breast tumor extraction."""
 
-    TYPE_CHOICES = ('Mastectomy', 'Lumpectomy')
-    """
-    The advisory surgery types list. The client should include these surgery type
-    choices, but allow for free-form text where necessary.
-    """
+    TYPE_CHOICES = ('Total Mastectomy', 'Partial Mastectomy', 'Lumpectomy')
+    """The surgery type controlled values."""
 
-    surgery_type = fields.StringField()
-
-    is_partial = fields.BooleanField(default=False)
+    surgery_type = fields.StringField(choices=TYPE_CHOICES)
 
 
 class Evaluation(mongoengine.EmbeddedDocument):
@@ -228,15 +222,11 @@ class SarcomaPathology(Pathology):
                          'Clear Cell', 'Dermatofibrosarcoma', 'Fibrosarcoma',
                          'Leiomyosarcoma', 'Liposarcoma', 'MFH', 'MPNST',
                          'Osteosarcoma', 'Rhabdomyosarcoma', 'Synovial', 'Other')
-    """
-    The advisory histololgy list. The client should constrain the histology
-    choices to this list where possible, but allow for free-form text where
-    necessary.
-    """
+    """The histololgy controlled values."""
 
     location = fields.StringField()
 
-    histology = fields.StringField()
+    histology = fields.StringField(choices=HISTOLOGY_CHOICES)
 
     necrosis_percent = fields.EmbeddedDocumentField('NecrosisPercent')
 
@@ -504,9 +494,9 @@ class FNCLCCGrade(Grade):
 
     differentiation = fields.IntField(choices=range(1, 4))
 
-    mitotic_count = fields.IntField(choices=range(1, 4))
-
     necrosis_score = fields.IntField(choices=range(0, 3))
+
+    mitotic_count = fields.IntField(choices=range(1, 4))
 
 
 def necrosis_percent_as_score(necrosis_percent):
