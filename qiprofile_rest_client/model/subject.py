@@ -27,7 +27,7 @@ class Subject(mongoengine.Document):
                          ('Non-Hispanic' , 'Not Hispanic or Latino')]
     """The standard FDA ethnicity categories."""
 
-    GENDER_CHOICES = [('M', 'Male'), ('F', 'Female')]
+    GENDER_CHOICES = ['Male', 'Female']
     """The Male and Female genders."""
 
     meta = dict(collection='qiprofile_subject')
