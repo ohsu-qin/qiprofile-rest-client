@@ -1,7 +1,7 @@
 from datetime import datetime
 from mongoengine import (connect, ValidationError)
-from mongoengine.connection import get_db
 from nose.tools import (assert_true, assert_false, assert_equal, assert_raises)
+from qiprofile_rest_client.helpers import database
 from qiprofile_rest_client.model.subject import Subject
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol, LabelMap,
@@ -123,7 +123,6 @@ class TestModel(object):
                                            " expected %s, found %s"
                                            % (value, str(size)))
 
-
     def test_necrosis_score(self):
         fixture = {
             0: dict(integer=0,
@@ -168,11 +167,11 @@ class TestModel(object):
         # The session subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The modeling protocol must exist.
-        mdl_pcl = self._get_or_create(ModelingProtocol,
-                                      dict(technique='Bolero'),
-                                      input_parameters=dict(r10_val=0.7))
+        mdl_pcl = database.get_or_create(ModelingProtocol,
+                                         dict(technique='Bolero'),
+                                         input_parameters=dict(r10_val=0.7))
         # The source protocol.
-        scan_pcl = self._get_or_create(ScanProtocol, dict(scan_type='T1'))
+        scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         source = Modeling.Source(scan=scan_pcl)
         # The modeling data.
         ktrans = Modeling.ParameterResult(filename='/path/to/ktrans.nii.gz')
@@ -187,11 +186,11 @@ class TestModel(object):
     def test_scan(self):
         # The scan protocol.
         voxel_size = VoxelSize(width=2, depth=4, spacing=2.4)
-        protocol = self._get_or_create(ScanProtocol,
-                                       dict(scan_type='T1'),
-                                       orientation='axial',
-                                       description='T1 AX SPIN ECHO',
-                                       voxel_size=voxel_size)
+        protocol = database.get_or_create(ScanProtocol,
+                                          dict(scan_type='T1'),
+                                          orientation='axial',
+                                          description='T1 AX SPIN ECHO',
+                                          voxel_size=voxel_size)
         # The scan.
         scan = Scan(protocol=protocol, number=1)
         # Validate the session detail and embedded scan.
@@ -200,7 +199,7 @@ class TestModel(object):
 
     def test_bolus_arrival(self):
         # The scan protocol.
-        protocol = self._get_or_create(ScanProtocol, dict(scan_type='T1'))
+        protocol = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         # The scan with a bogus bolus arrival.
         scan = Scan(protocol=protocol, number=1, bolus_arrival_index=4)
         # The detail object.
@@ -223,15 +222,15 @@ class TestModel(object):
 
     def test_registration(self):
         # The scan protocol.
-        scan_pcl = self._get_or_create(ScanProtocol, dict(scan_type='T1'))
+        scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
 
         # The registration protocol.
         reg_params = dict(transforms=['Rigid', 'Affine', 'SyN'])
-        reg_pcl = self._get_or_create(RegistrationProtocol,
-                                      dict(technique='ANTS'),
-                                      parameters=reg_params)
+        reg_pcl = database.get_or_create(RegistrationProtocol,
+                                         dict(technique='ANTS'),
+                                         parameters=reg_params)
         # The registration.
         reg = Registration(protocol=reg_pcl, resource='reg_h3Fk5')
 
@@ -243,7 +242,8 @@ class TestModel(object):
 
     def test_roi(self):
         # The scan protocol.
-        scan_pcl = self._get_or_create(ScanProtocol, dict(scan_type='T1'))
+        scan_pcl = database.get_or_create(ScanProtocol,
+                                          dict(scan_type='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
 
@@ -261,21 +261,6 @@ class TestModel(object):
         detail = SessionDetail(scans=[scan])
         detail.scans = [scan]
         detail.validate()
-
-    def _get_or_create(self, klass, pk, **opts):
-        """
-        :param klass: the data model class
-        :param pk: the primary key {attribute: value} dictionary
-        :param opts: the non-key {attribute: value} dictionary
-        :return: the existing or new object
-        """
-        try:
-            return klass.objects.get(**pk)
-        except klass.DoesNotExist:
-            opts.update(pk)
-            obj = klass(**opts)
-            obj.save()
-            return obj
 
 if __name__ == "__main__":
     import nose
