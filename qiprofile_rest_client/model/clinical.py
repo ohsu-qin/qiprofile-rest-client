@@ -15,27 +15,6 @@ YES_NO_CHOICES = [(True, 'Yes'), (False, 'No')]
 """The Boolean choices for Yes/No display values."""
 
 
-class Treatment(mongoengine.EmbeddedDocument):
-    """
-    The patient therapy, e.g. adjuvant. Treatment is one of
-    the :const:`Treatment.TYPE_CHOICES` types, and occurs over
-    a period of time. The treatment consists of dosages, which
-    may be pharmocological or radiological.
-    """
-
-    TYPE_CHOICES = ('Neoadjuvant', 'Primary', 'Adjuvant')
-
-    treatment_type = fields.StringField(choices=TYPE_CHOICES)
-
-    start_date = fields.DateTimeField(required=True)
-
-    end_date = fields.DateTimeField(required=True)
-
-    dosages = fields.ListField(
-        field=mongoengine.EmbeddedDocumentField('Dosage')
-    )
-
-
 class Dosage(mongoengine.EmbeddedDocument):
     """The agent dosage."""
 
@@ -91,152 +70,167 @@ class OtherAgent(Agent):
     name = fields.StringField(required=True)
 
 
-class Biopsy(Encounter):
-    """Non-therapeutic tissue extraction resulting in a pathology report."""
+class Treatment(mongoengine.EmbeddedDocument):
+    """
+    The patient therapy, e.g. adjuvant. Treatment is one of
+    the :const:`Treatment.TYPE_CHOICES` types, and occurs over
+    a period of time. The treatment consists of dosages, which
+    may be pharmocological or radiological.
+    """
 
-    pathology = fields.EmbeddedDocumentField('Pathology', required=True)
+    TYPE_CHOICES = ('Neoadjuvant', 'Primary', 'Adjuvant')
 
+    treatment_type = fields.StringField(choices=TYPE_CHOICES)
 
-class Surgery(Encounter):
-    """Therapeutic tissue extraction which usually results in a pathology report."""
+    start_date = fields.DateTimeField(required=True)
 
-    meta = dict(allow_inheritance=True)
+    end_date = fields.DateTimeField(required=True)
 
-    pathology = fields.EmbeddedDocumentField('Pathology')
-
-
-class Assessment(Encounter):
-    """Generic collection of outcomes."""
-
-    evaluation = fields.EmbeddedDocumentField('GenericEvaluation')
-
-
-class BreastSurgery(Surgery):
-    """Breast tumor extraction."""
-
-    TYPE_CHOICES = ('Total Mastectomy', 'Partial Mastectomy', 'Lumpectomy')
-    """The surgery type controlled values."""
-
-    surgery_type = fields.StringField(choices=TYPE_CHOICES)
-
-
-class Evaluation(mongoengine.EmbeddedDocument):
-    """The patient evaluation holds outcomes."""
-
-    meta = dict(allow_inheritance=True)
-
-
-class GenericEvaluation(Evaluation):
-    """An unconstrained set of outcomes."""
-
-    outcomes = fields.ListField(fields.EmbeddedDocumentField('Outcome'))
-
-
-class Pathology(Evaluation):
-    """The patient pathology summary."""
-
-    meta = dict(allow_inheritance=True)
-
-    tnm = fields.EmbeddedDocumentField('TNM')
-
-
-class BreastGeneticExpression(mongoengine.EmbeddedDocument):
-    """The breast patient genetic expression results."""
-
-    HER2_NEU_IHC_CHOICES = [(0, '0'), (1, '1+'), (2, '2+'), (3, '3+')]
-    """The HER2 NEU IHC choices are displayed as 0, 1+, 2+, 3+."""
-
-    class KI67Field(fields.IntField):
-        def validate(self, value, clean=True):
-            return value >= 0 and value <= 100
-
-    her2_neu_ihc = fields.IntField(choices=HER2_NEU_IHC_CHOICES)
-
-    her2_neu_fish = fields.BooleanField(choices=POS_NEG_CHOICES)
-
-    ki67 = KI67Field()
-
-    normalized_assay = fields.EmbeddedDocumentField('BreastNormalizedAssay')
-
-
-class BreastPathology(Pathology):
-    """The QIN breast patient pathology summary."""
-
-    hormone_receptors = fields.ListField(
-        field=mongoengine.EmbeddedDocumentField('HormoneReceptorStatus')
+    dosages = fields.ListField(
+        field=mongoengine.EmbeddedDocumentField(Dosage)
     )
 
-    genetic_expression = fields.EmbeddedDocumentField('BreastGeneticExpression')
-
-
-class BreastNormalizedAssayField(fields.IntField):
-    """The normalized Breast genomics result in the inclusive range [0, 15]."""
-
-    def validate(self, value, clean=True):
-        return value > 0 and value <= 15
-
-
-class BreastNormalizedAssay(mongoengine.EmbeddedDocument):
-    """The Breast genomics panel normalized to reference genes."""
-
-    class HER2(mongoengine.EmbeddedDocument):
-        grb7 = BreastNormalizedAssayField()
-        her2 = BreastNormalizedAssayField()
-
-    class Estrogen(mongoengine.EmbeddedDocument):
-        er = BreastNormalizedAssayField()
-        pgr = BreastNormalizedAssayField()
-        bcl2 = BreastNormalizedAssayField()
-        scube2 = BreastNormalizedAssayField()
-
-    class Proliferation(mongoengine.EmbeddedDocument):
-        ki67 = BreastNormalizedAssayField()
-        stk15 = BreastNormalizedAssayField()
-        survivin = BreastNormalizedAssayField()
-        ccnb1 = BreastNormalizedAssayField()
-        mybl2 = BreastNormalizedAssayField()
-
-    class Invasion(mongoengine.EmbeddedDocument):
-        mmp11 = BreastNormalizedAssayField()
-        ctsl2 = BreastNormalizedAssayField()
-
-    gstm1 = BreastNormalizedAssayField()
-
-    cd68 = BreastNormalizedAssayField()
-
-    bag1 = BreastNormalizedAssayField()
-
-    her2 = fields.EmbeddedDocumentField(HER2)
-
-    estrogen = fields.EmbeddedDocumentField(Estrogen)
-
-    proliferation = fields.EmbeddedDocumentField(Proliferation)
-
-    invasion = fields.EmbeddedDocumentField(Invasion)
-
-
-class SarcomaPathology(Pathology):
-    """The QIN sarcoma patient pathology summary."""
-
-    HISTOLOGY_CHOICES = ('Carcinosarcoma', 'Cerebellar', 'Chondrosarcoma',
-                         'Clear Cell', 'Dermatofibrosarcoma', 'Fibrosarcoma',
-                         'Leiomyosarcoma', 'Liposarcoma', 'MFH', 'MPNST',
-                         'Osteosarcoma', 'Rhabdomyosarcoma', 'Synovial', 'Other')
-    """The histololgy controlled values."""
-
-    location = fields.StringField()
-
-    histology = fields.StringField(choices=HISTOLOGY_CHOICES)
-
-    necrosis_percent = fields.EmbeddedDocumentField('NecrosisPercent')
-
-
-## Clinical metrics ##
 
 class Outcome(mongoengine.EmbeddedDocument):
     """The patient clinical outcome."""
 
     meta = dict(allow_inheritance=True)
+
+
+class Grade(Outcome):
+    """
+    The abstract tumor grade superclass, specialized for each
+    tumor type.
+    """
+
+    meta = dict(allow_inheritance=True)
+
+
+class ModifiedBloomRichardsonGrade(Grade):
+    """
+    The `Modified Bloom Richardson <http://pathology.jhu.edu/breast/grade.php>`_
+    (a.k.a. Nottingham) breast tumor grade.
+    """
+
+    COMPONENT_CHOICES = range(1, 4)
+
+    tubular_formation = fields.IntField(choices=COMPONENT_CHOICES)
+
+    nuclear_pleomorphism = fields.IntField(choices=COMPONENT_CHOICES)
+
+    mitotic_count = fields.IntField(choices=COMPONENT_CHOICES)
+
+
+class FNCLCCGrade(Grade):
+    """
+    The `FNCLCC <http://www.iarc.fr/en/publications/pdfs-online/pat-gen/bb5/bb5-classifsofttissue.pdf>`_
+    sarcoma tumor grade."""
+
+    differentiation = fields.IntField(choices=range(1, 4))
+
+    necrosis_score = fields.IntField(choices=range(0, 3))
+
+    mitotic_count = fields.IntField(choices=range(1, 4))
+
+
+def necrosis_percent_as_score(necrosis_percent):
+    """
+    Calculates the necrosis score from the necrosis percent
+    according to the
+    `Stanford Synovial Sarcoma Guideline<http://surgpathcriteria.stanford.edu/softmisc/synovial_sarcoma/grading.html>`
+    as follows:
+    * If the percent is None, then None
+    * Otherwise, if the percent is 0, then 0
+    * Otherwise, if the percent is less than 50, then 1
+    * Otherwise, 2
+    
+    :param necrosis_percent: the integer percent,
+        :class:`NecrosisPercentValue` or  :class:`NecrosisPercentRange`
+    :return: the necrosis score
+    :raise ValidationError: if the percent is a range that spans 50%
+    """
+    if necrosis_percent == None:
+        return None
+    # Wrap a simple integer as a trivial range.
+    if isinstance(necrosis_percent, int):
+        necrosis_range = NecrosisPercentRange(
+            start=NecrosisPercentRange.LowerBound(value=necrosis_percent),
+            stop=NecrosisPercentRange.UpperBound(value=necrosis_percent + 1)
+        )
+    # Convert a value to a trivial range for convenience.
+    elif isinstance(necrosis_percent, NecrosisPercentValue):
+        necrosis_range = NecrosisPercentRange(
+            start=NecrosisPercentRange.LowerBound(value=necrosis_percent.value),
+            stop=NecrosisPercentRange.UpperBound(value=necrosis_percent.value + 1)
+        )
+    elif isinstance(necrosis_percent, NecrosisPercentRange):
+        necrosis_range = necrosis_percent
+    else:
+        raise ValidationError("Necrosis percent type is not supported: %s" %
+                              necrosis_percent.__class__)
+    if necrosis_range.stop.value == 1:
+        return 0
+    elif necrosis_range.stop.value <= 50:
+        return 1
+    elif necrosis_range.start.value >= 50:
+        return 2
+    else:
+        raise ValidationError("The necrosis percent score cannot be"
+                              " determined from the range" % necrosis_range)
+
+
+class NecrosisPercent(Outcome):
+    """The necrosis percent value or range."""
+
+    meta = dict(allow_inheritance=True)
+
+
+class NecrosisPercentValue(NecrosisPercent):
+    """The necrosis percent absolute value."""
+
+    value = fields.IntField(choices=range(0, 101))
+
+
+class NecrosisPercentRange(NecrosisPercent):
+    """
+    The necrosis percent range.
+    
+    :Note: it is recommended, although not required, that the percent
+        range is a decile range, e.g. [20-30].
+    
+    :Note: A range which spans 50%, e.g. [40-60], results in a
+        :meth:`necrosis_percent_as_score` ValidationError.
+    """
+
+    class Bound(mongoengine.EmbeddedDocument):
+        """
+        Necrosis percent upper or lower bound abstract class.
+        The subclass is responsible for adding the ``inclusive``
+        field.
+        """
+
+        meta = dict(allow_inheritance=True)
+
+        value = fields.IntField(choices=range(0, 101))
+
+
+    class LowerBound(Bound):
+        """Necrosis percent lower bound."""
+
+        inclusive = fields.BooleanField(default=True)
+
+
+    class UpperBound(Bound):
+        """Necrosis percent upper bound."""
+
+        inclusive = fields.BooleanField(default=False)
+
+    start = fields.EmbeddedDocumentField(LowerBound)
+
+    stop = fields.EmbeddedDocumentField(UpperBound)
+    
+    def __repr__(self):
+        return "%d-%d" % (self.start, self.stop)
 
 
 class TNM(Outcome):
@@ -427,13 +421,13 @@ class TNM(Outcome):
 
     metastasis = fields.BooleanField(choices=POS_NEG_CHOICES)
 
-    grade = fields.EmbeddedDocumentField('Grade')
+    grade = fields.EmbeddedDocumentField(Grade)
 
     serum_tumor_markers = fields.IntField(choices=range(0, 4))
 
     resection_boundaries = fields.IntField(choices=range(0, 3))
 
-    lymphatic_vessel_invasion = fields.BooleanField()
+    lymphatic_vessel_invasion = fields.BooleanField(choices=POS_NEG_CHOICES)
 
     vein_invasion = fields.IntField(choices=range(0, 3))
 
@@ -447,30 +441,6 @@ class TNM(Outcome):
             tumor_type = 'Any'
 
         return TNM.LYMPH_STATUS_CHOICES[tumor_type]
-
-
-class Grade(Outcome):
-    """
-    The abstract tumor grade superclass, specialized for each
-    tumor type.
-    """
-
-    meta = dict(allow_inheritance=True)
-
-
-class ModifiedBloomRichardsonGrade(Grade):
-    """
-    The `Modified Bloom Richardson <http://pathology.jhu.edu/breast/grade.php>`_
-    (a.k.a. Nottingham) breast tumor grade.
-    """
-
-    COMPONENT_CHOICES = range(1, 4)
-
-    tubular_formation = fields.IntField(choices=COMPONENT_CHOICES)
-
-    nuclear_pleomorphism = fields.IntField(choices=COMPONENT_CHOICES)
-
-    mitotic_count = fields.IntField(choices=COMPONENT_CHOICES)
 
 
 class HormoneReceptorStatus(Outcome):
@@ -489,111 +459,145 @@ class HormoneReceptorStatus(Outcome):
     intensity = IntensityField()
 
 
-class FNCLCCGrade(Grade):
-    """The FNCLCC sarcoma tumor grade."""
+class BreastNormalizedAssayField(fields.IntField):
+    """The normalized Breast genomics result in the inclusive range [0, 15]."""
 
-    differentiation = fields.IntField(choices=range(1, 4))
-
-    necrosis_score = fields.IntField(choices=range(0, 3))
-
-    mitotic_count = fields.IntField(choices=range(1, 4))
+    def validate(self, value, clean=True):
+        return value > 0 and value <= 15
 
 
-def necrosis_percent_as_score(necrosis_percent):
-    """
-    Calculates the necrosis score from the necrosis percent
-    according to the
-    `Stanford Synovial Sarcoma Guideline<http://surgpathcriteria.stanford.edu/softmisc/synovial_sarcoma/grading.html>`
-    as follows:
-    * If the percent is None, then None
-    * Otherwise, if the percent is 0, then 0
-    * Otherwise, if the percent is less than 50, then 1
-    * Otherwise, 2
-    
-    :param necrosis_percent: the integer percent,
-        :class:`NecrosisPercentValue` or  :class:`NecrosisPercentRange`
-    :return: the necrosis score
-    :raise ValidationError: if the percent is a range that spans 50%
-    """
-    if necrosis_percent == None:
-        return None
-    # Wrap a simple integer as a trivial range.
-    if isinstance(necrosis_percent, int):
-        necrosis_range = NecrosisPercentRange(
-            start=NecrosisPercentRange.LowerBound(value=necrosis_percent),
-            stop=NecrosisPercentRange.UpperBound(value=necrosis_percent + 1)
-        )
-    # Convert a value to a trivial range for convenience.
-    elif isinstance(necrosis_percent, NecrosisPercentValue):
-        necrosis_range = NecrosisPercentRange(
-            start=NecrosisPercentRange.LowerBound(value=necrosis_percent.value),
-            stop=NecrosisPercentRange.UpperBound(value=necrosis_percent.value + 1)
-        )
-    elif isinstance(necrosis_percent, NecrosisPercentRange):
-        necrosis_range = necrosis_percent
-    else:
-        raise ValidationError("Necrosis percent type is not supported: %s" %
-                              necrosis_percent.__class__)
-    if necrosis_range.stop.value == 1:
-        return 0
-    elif necrosis_range.stop.value <= 50:
-        return 1
-    elif necrosis_range.start.value >= 50:
-        return 2
-    else:
-        raise ValidationError("The necrosis percent score cannot be"
-                              " determined from the range" % necrosis_range)
+class BreastNormalizedAssay(mongoengine.EmbeddedDocument):
+    """The Breast genomics panel normalized to reference genes."""
+
+    class HER2(mongoengine.EmbeddedDocument):
+        grb7 = BreastNormalizedAssayField()
+        her2 = BreastNormalizedAssayField()
+
+    class Estrogen(mongoengine.EmbeddedDocument):
+        er = BreastNormalizedAssayField()
+        pgr = BreastNormalizedAssayField()
+        bcl2 = BreastNormalizedAssayField()
+        scube2 = BreastNormalizedAssayField()
+
+    class Proliferation(mongoengine.EmbeddedDocument):
+        ki67 = BreastNormalizedAssayField()
+        stk15 = BreastNormalizedAssayField()
+        survivin = BreastNormalizedAssayField()
+        ccnb1 = BreastNormalizedAssayField()
+        mybl2 = BreastNormalizedAssayField()
+
+    class Invasion(mongoengine.EmbeddedDocument):
+        mmp11 = BreastNormalizedAssayField()
+        ctsl2 = BreastNormalizedAssayField()
+
+    gstm1 = BreastNormalizedAssayField()
+
+    cd68 = BreastNormalizedAssayField()
+
+    bag1 = BreastNormalizedAssayField()
+
+    her2 = fields.EmbeddedDocumentField(HER2)
+
+    estrogen = fields.EmbeddedDocumentField(Estrogen)
+
+    proliferation = fields.EmbeddedDocumentField(Proliferation)
+
+    invasion = fields.EmbeddedDocumentField(Invasion)
 
 
-class NecrosisPercent(Outcome):
-    """The necrosis percent value or range."""
+class BreastGeneticExpression(mongoengine.EmbeddedDocument):
+    """The breast patient genetic expression results."""
+
+    HER2_NEU_IHC_CHOICES = [(0, '0'), (1, '1+'), (2, '2+'), (3, '3+')]
+    """The HER2 NEU IHC choices are displayed as 0, 1+, 2+, 3+."""
+
+    class KI67Field(fields.IntField):
+        def validate(self, value, clean=True):
+            return value >= 0 and value <= 100
+
+    her2_neu_ihc = fields.IntField(choices=HER2_NEU_IHC_CHOICES)
+
+    her2_neu_fish = fields.BooleanField(choices=POS_NEG_CHOICES)
+
+    ki67 = KI67Field()
+
+    normalized_assay = fields.EmbeddedDocumentField(BreastNormalizedAssay)
+
+
+class Evaluation(mongoengine.EmbeddedDocument):
+    """The patient evaluation holds outcomes."""
 
     meta = dict(allow_inheritance=True)
 
 
-class NecrosisPercentValue(NecrosisPercent):
-    """The necrosis percent absolute value."""
+class GenericEvaluation(Evaluation):
+    """An unconstrained set of outcomes."""
 
-    value = fields.IntField(choices=range(0, 101))
+    outcomes = fields.ListField(fields.EmbeddedDocumentField(Outcome))
 
 
-class NecrosisPercentRange(NecrosisPercent):
+class Pathology(Evaluation):
+    """The patient pathology summary."""
+
+    meta = dict(allow_inheritance=True)
+
+    tnm = fields.EmbeddedDocumentField(TNM)
+
+
+class BreastPathology(Pathology):
+    """The QIN breast patient pathology summary."""
+
+    hormone_receptors = fields.ListField(
+        field=mongoengine.EmbeddedDocumentField(HormoneReceptorStatus)
+    )
+
+    genetic_expression = fields.EmbeddedDocumentField(BreastGeneticExpression)
+
+
+class SarcomaPathology(Pathology):
+    """The QIN sarcoma patient pathology summary."""
+
+    HISTOLOGY_CHOICES = ('Carcinosarcoma', 'Cerebellar', 'Chondrosarcoma',
+                         'Clear Cell', 'Dermatofibrosarcoma', 'Fibrosarcoma',
+                         'Leiomyosarcoma', 'Liposarcoma', 'MFH', 'MPNST',
+                         'Osteosarcoma', 'Rhabdomyosarcoma', 'Synovial', 'Other')
+    """The histology controlled values."""
+
+    location = fields.StringField()
+
+    histology = fields.StringField(choices=HISTOLOGY_CHOICES)
+
+    necrosis_percent = fields.EmbeddedDocumentField(NecrosisPercent)
+
+
+class Biopsy(Encounter):
     """
-    The necrosis percent range.
-    
-    :Note: it is recommended, although not required, that the percent
-        range is a decile range, e.g. [20-30].
-    
-    :Note: A range which spans 50%, e.g. [40-60], results in a
-        :meth:`necrosis_percent_as_score` ValidationError.
+    Non-therapeutic tissue extraction resulting in a pathology report.
     """
 
-    class Bound(mongoengine.EmbeddedDocument):
-        """
-        Necrosis percent upper or lower bound abstract class.
-        The subclass is responsible for adding the ``inclusive``
-        field.
-        """
-
-        meta = dict(allow_inheritance=True)
-
-        value = fields.IntField(choices=range(0, 101))
+    pathology = fields.EmbeddedDocumentField(Pathology, required=True)
 
 
-    class LowerBound(Bound):
-        """Necrosis percent lower bound."""
+class Surgery(Encounter):
+    """
+    Therapeutic tissue extraction which usually results in a pathology report.
+    """
 
-        inclusive = fields.BooleanField(default=True)
+    meta = dict(allow_inheritance=True)
+
+    pathology = fields.EmbeddedDocumentField(Pathology)
 
 
-    class UpperBound(Bound):
-        """Necrosis percent upper bound."""
+class Assessment(Encounter):
+    """Generic collection of outcomes."""
 
-        inclusive = fields.BooleanField(default=False)
+    evaluation = fields.EmbeddedDocumentField(GenericEvaluation)
 
-    start = fields.EmbeddedDocumentField(LowerBound)
 
-    stop = fields.EmbeddedDocumentField(UpperBound)
-    
-    def __repr__(self):
-        return "%d-%d" % (self.start, self.stop)
+class BreastSurgery(Surgery):
+    """Breast tumor extraction."""
+
+    TYPE_CHOICES = ('Total Mastectomy', 'Partial Mastectomy', 'Lumpectomy')
+    """The surgery type controlled values."""
+
+    surgery_type = fields.StringField(choices=TYPE_CHOICES)
