@@ -1,10 +1,6 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
-5.5.2 / 2015-06-25
-------------------
-Add get_or_create utility.
-
 5.5.1 / 2015-06-25
 ------------------
 Upgrade to MongoDB 3.
