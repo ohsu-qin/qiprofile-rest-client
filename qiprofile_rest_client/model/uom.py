@@ -11,66 +11,6 @@ from numbers import Number
 import mongoengine
 from mongoengine import fields
 
-class Measurement(mongoengine.EmbeddedDocument):
-    """
-    A scientific measurement.
-
-    The measurement is a quantitative amount associated with a unit.
-    The unit is the Unit as captured and displayed. The amount is
-    expressed as a python Decimal in unscaled units. If the constructor
-    is called with a non-Decimal numeric amount, then the value is
-    converted to a Decimal, e.g.::
-
-        Measurement(amount=0.006, unit=Weight())
-
-    is equivalent to::
-
-        from decimal import Decimal
-        Measurement(amount=Decimal(0.006), unit=Weight())
-
-    The measurement unit can be qualified by a second ``per_unit``
-    dimension, e.g. 2 mg/kg dosage per patient weight is expressed
-    as::
-
-        Measurement(amount=0.002, unit=Weight(), per_unit=Weight(scale='k'))
-
-    :Note: the amount is a :class:`Decimal` embedded object rather than
-      the broken MongoEngine ``DecimalField`` (see the :class:`Decimal`
-      comment).
-    """
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initializes the Measurement document. The amount can be either
-        a positional or a keyword argument. The amount is converted to
-        a Decimal.
-        
-        :param args: the amount as a positional argument
-        :param kwargs: the following keyword arguments:
-        :keyword amount: the amount as a keyword argument
-        """
-        # Convert the amount to a Decimal, if necessary. The amount
-        # can be the first positional argument or a keyword argument.
-        if args:
-            args = list(args)
-            args[0] = self._as_decimal(args[0])
-        elif 'amount' in kwargs:
-            kwargs['amount'] = self._as_decimal(kwargs['amount'])
-        
-        super(Measurement, self).__init__(*args, **kwargs)
-
-    def _as_decimal(self, value):
-        if isinstance(value, Number):
-            return Decimal(value)
-        else:
-            return value
-
-    amount = fields.EmbeddedDocumentField('Decimal', required=True)
-
-    unit = fields.EmbeddedDocumentField('Unit')
-
-    per_unit = fields.EmbeddedDocumentField('Unit')
-
 
 class Decimal(mongoengine.EmbeddedDocument):
     """
@@ -222,3 +162,63 @@ class Radiation(Unit):
 
     BASE = 'Gy'
     """The Gray designator."""
+
+class Measurement(mongoengine.EmbeddedDocument):
+    """
+    A scientific measurement.
+
+    The measurement is a quantitative amount associated with a unit.
+    The unit is the Unit as captured and displayed. The amount is
+    expressed as a python Decimal in unscaled units. If the constructor
+    is called with a non-Decimal numeric amount, then the value is
+    converted to a Decimal, e.g.::
+
+        Measurement(amount=0.006, unit=Weight())
+
+    is equivalent to::
+
+        from decimal import Decimal
+        Measurement(amount=Decimal(0.006), unit=Weight())
+
+    The measurement unit can be qualified by a second ``per_unit``
+    dimension, e.g. 2 mg/kg dosage per patient weight is expressed
+    as::
+
+        Measurement(amount=0.002, unit=Weight(), per_unit=Weight(scale='k'))
+
+    :Note: the amount is a :class:`Decimal` embedded object rather than
+      the broken MongoEngine ``DecimalField`` (see the :class:`Decimal`
+      comment).
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes the Measurement document. The amount can be either
+        a positional or a keyword argument. The amount is converted to
+        a Decimal.
+        
+        :param args: the amount as a positional argument
+        :param kwargs: the following keyword arguments:
+        :keyword amount: the amount as a keyword argument
+        """
+        # Convert the amount to a Decimal, if necessary. The amount
+        # can be the first positional argument or a keyword argument.
+        if args:
+            args = list(args)
+            args[0] = self._as_decimal(args[0])
+        elif 'amount' in kwargs:
+            kwargs['amount'] = self._as_decimal(kwargs['amount'])
+        
+        super(Measurement, self).__init__(*args, **kwargs)
+
+    def _as_decimal(self, value):
+        if isinstance(value, Number):
+            return Decimal(value)
+        else:
+            return value
+
+    amount = fields.EmbeddedDocumentField(Decimal, required=True)
+
+    unit = fields.EmbeddedDocumentField(Unit)
+
+    per_unit = fields.EmbeddedDocumentField(Unit)

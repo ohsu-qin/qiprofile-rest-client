@@ -10,42 +10,22 @@ from mongoengine import (fields, signals, ValidationError)
 from .. import choices
 from .encounter import Encounter
 
-class Session(Encounter):
-    """The MR session (a.k.a. *study* in DICOM terminology)."""
-
-    modelings = fields.ListField(
-        field=fields.EmbeddedDocumentField('Modeling')
-    )
-    """The modeling performed on the session."""
-
-    detail = fields.ReferenceField('SessionDetail')
-    """The session detail reference."""
-
-    @classmethod
-    def pre_delete(cls, sender, document, **kwargs):
-        """Cascade delete this Session's detail."""
-
-        if self.detail:
-            self.detail.delete()
-
-signals.pre_delete.connect(Session.pre_delete, sender=Session)
-
 
 class VoxelSize(mongoengine.EmbeddedDocument):
     """The voxel width, depth and spacing."""
-    
+
     width = fields.FloatField()
     """
     The voxel width (= voxel length) in millimeters. For an MR, the width
     is the DICOM Pixel Spacing value.
     """
-    
+
     depth = fields.FloatField()
     """
     The voxel depth in millimeters. For an MR, the depth is the DICOM
     Slice Thickness.
     """
-    
+
     spacing = fields.FloatField()
     """
     The inter-slice spacing in millimeters. For an MR, the spacing is
@@ -55,21 +35,31 @@ class VoxelSize(mongoengine.EmbeddedDocument):
 
 class Point(mongoengine.EmbeddedDocument):
     """The 3D point in the volume voxel space."""
-    
+
     x = fields.IntField()
     """
     The x dimension value in the image coordinate system.
     """
-    
+
     y = fields.IntField()
     """
     The y dimension value in the image coordinate system.
     """
-    
+
     z = fields.IntField()
     """
     The z dimension value in the image coordinate system.
     """
+
+
+class LabelMap(mongoengine.EmbeddedDocument):
+    """A label map with an optional associated color lookup table."""
+
+    filename = fields.StringField(required=True)
+    """The label map file path relative to the web app root."""
+
+    color_table = fields.StringField()
+    """The color map lookup table file path relative to the web app root."""
 
 
 class Region(mongoengine.EmbeddedDocument):
@@ -78,9 +68,9 @@ class Region(mongoengine.EmbeddedDocument):
     mask = fields.StringField()
     """The binary mask file name."""
 
-    label_map = fields.EmbeddedDocumentField('LabelMap')
+    label_map = fields.EmbeddedDocumentField(LabelMap)
     """The label map file name."""
-        
+
     centroid = mongoengine.EmbeddedDocumentField(Point)
     """The region centroid."""
 
@@ -98,23 +88,14 @@ class Volume(mongoengine.EmbeddedDocument):
     """The image signal intensity over the entire volume."""
 
 
-class LabelMap(mongoengine.EmbeddedDocument):
-    """A label map with an optional associated color lookup table."""
-
-    filename = fields.StringField(required=True)
-    """The label map file path relative to the web app root."""
-
-    color_table = fields.StringField()
-    """The color map lookup table file path relative to the web app root."""
-
-
 class ImageSequence(mongoengine.EmbeddedDocument):
     """The scan or registration image volume container."""
 
     meta = dict(allow_inheritance=True)
-    
+
     volumes = fields.ListField(field=mongoengine.EmbeddedDocumentField(Volume))
     """The 3D volume images in the sequence."""
+
 
 class RegistrationProtocol(mongoengine.Document):
     """The registration settings."""
@@ -132,7 +113,7 @@ class Registration(ImageSequence):
     """
     The patient image registration that results from processing a scan.
     """
-    
+
     protocol = fields.ReferenceField(RegistrationProtocol, required=True)
     """The registration protocol."""
 
@@ -148,7 +129,7 @@ class ScanProtocol(mongoengine.Document):
     """
 
     meta = dict(collection='qiprofile_scan_protocol')
-    
+
     ORIENTATION = ['axial', 'sagittal', 'coronal']
     """The three imaging axes."""
 
@@ -163,7 +144,7 @@ class ScanProtocol(mongoengine.Document):
     orientation = fields.StringField(choices=ORIENTATION,
                                      max_length=choices.max_length(ORIENTATION))
     """The imaging :const:`ORIENTATION` controlled value."""
-    
+
     technique = fields.StringField()
     """
     The scan technique, e.g. ``STIR``, ``FLAIR`` or ``BLISS``. The REST update
@@ -180,7 +161,7 @@ class ScanProtocol(mongoengine.Document):
     used by the REST update client to infer the controlled vocabulary
     scan type, orientation and technique field values.
     """
-    
+
     voxel_size = fields.EmbeddedDocumentField(VoxelSize)
     """The voxel size in millimeters."""
 
@@ -202,8 +183,8 @@ class Scan(ImageSequence):
 
     bolus_arrival_index = fields.IntField()
     """The bolus arrival volume index."""
-    
-    rois = fields.ListField(fields.EmbeddedDocumentField('Region'))
+
+    rois = fields.ListField(fields.EmbeddedDocumentField(Region))
     """The image regions of interest. There is one ROI per scan lesion."""
 
     registrations = fields.ListField(
@@ -228,7 +209,7 @@ class ModelingProtocol(mongoengine.Document):
     """The modeling procedure inputs."""
 
     meta = dict(collection='qiprofile_modeling_protocol')
-    
+
     technique = fields.StringField(required=True)
     """
     The modeling algorithm or framework, e.g. ``Tofts``.
@@ -254,33 +235,33 @@ class Modeling(mongoengine.EmbeddedDocument):
         average = fields.FloatField()
         """The average parameter value over all voxels."""
 
-        label_map = fields.EmbeddedDocumentField('LabelMap')
+        label_map = fields.EmbeddedDocumentField(LabelMap)
         """The label map overlay NiFTI file."""
-    
+
     class Source(mongoengine.EmbeddedDocument):
         """
         This Modeling.Source embedded class works around the following
         mongoengine limitation:
-        
+
         * mongoengine does not allow heterogeneous collections, i.e.
           a domain model Document subclass can not have subclasses.
           Furthermore, the domain model Document class cannot be
           an inner class, e.g. ModelingProtocol.
-        
+
         Consequently, the Modeling.source field cannot represent an
         abstract superclass of ScanProtocol and RegistrationProtocol.
         This Source embedded document introduces a disambiguation
         level by creating a disjunction object that can either hold
         a *registration* reference or a *scan* reference.
         """
-        
+
         scan = fields.ReferenceField(ScanProtocol)
-        
+
         registration = fields.ReferenceField(RegistrationProtocol)
-    
+
     protocol = fields.ReferenceField(ModelingProtocol, required=True)
     """The modeling protocol."""
-    
+
     source = fields.EmbeddedDocumentField(Source, required=True)
     """The modeling source protocol."""
 
@@ -292,17 +273,17 @@ class Modeling(mongoengine.EmbeddedDocument):
     )
     """
     The modeling {*parameter*: *result*} dictionary, where:
-    
+
     - *parameter* is the lower-case underscore parameter key, e.g.
       ``k_trans``.
-    
+
     - *result* is the corresponding :class:`ParameterResult`
 
     The parameters are determined by the :class:`ModelingProtocol`
     technique. For example, the `OHSU QIN modeling workflow`_ includes
     the following outputs for the FXL (`Tofts standard`_) model and the
     FXR (`shutter speed`_) model:
-    
+
     - *fxl_k_trans*, *fxr_k_trans*: the |Ktrans| vascular permeability
        transfer constant
 
@@ -314,20 +295,20 @@ class Modeling(mongoengine.EmbeddedDocument):
     - *fxr_tau_i*: the |taui| intracellular |H2O| mean lifetime
 
     - *fxl_chi_sq*, *fxr_chi_sq*: the |chisq| intensity goodness of fit
-    
+
     The REST client is responsible for anticipating and interpreting the
     meaning of the *parameter* based on the modeling technique. For
     example, if the image store has a session modeling resource
     ``pk_h7Jtl`` which includes the following files::
-    
+
         k_trans.nii.gz
         k_trans_overlay.nii.gz
         chi_sq.nii.gz
         chi_sq_overlay.nii.gz
-    
+
     then a REST database update client might calculate the average |Ktrans|
     and |chisq| values and populate the REST database as follows::
-    
+
         t1 = ScanProtocol.get_or_create(scan_type='T1',
                                         defaults=dict(orientation='axial'))
         tofts = ModelingProtocol.get_or_create(technique='Tofts')
@@ -348,7 +329,7 @@ class Modeling(mongoengine.EmbeddedDocument):
     It is then the responsibility of an imaging web app REST read client
     to interpret the modeling result dictionary items and display them
     appropriately.
-    
+
     .. reST substitutions:
     .. include:: <isogrk3.txt>
     .. |H2O| replace:: H\ :sub:`2`\ O
@@ -373,3 +354,24 @@ class SessionDetail(mongoengine.Document):
 
     scans = fields.ListField(field=mongoengine.EmbeddedDocumentField(Scan))
     """The list of scans."""
+
+
+class Session(Encounter):
+    """The MR session (a.k.a. *study* in DICOM terminology)."""
+
+    modelings = fields.ListField(
+        field=fields.EmbeddedDocumentField(Modeling)
+    )
+    """The modeling performed on the session."""
+    
+    detail = fields.ReferenceField(SessionDetail)
+    """The session detail reference."""
+
+    @classmethod
+    def pre_delete(cls, sender, document, **kwargs):
+        """Cascade delete this Session's detail."""
+
+        if self.detail:
+            self.detail.delete()
+
+signals.pre_delete.connect(Session.pre_delete, sender=Session)

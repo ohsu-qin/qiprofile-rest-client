@@ -15,34 +15,6 @@ YES_NO_CHOICES = [(True, 'Yes'), (False, 'No')]
 """The Boolean choices for Yes/No display values."""
 
 
-class Dosage(mongoengine.EmbeddedDocument):
-    """The agent dosage."""
-
-    agent = fields.EmbeddedDocumentField('Agent', required=True)
-    """The administered Drug or Radiation."""
-
-    amount = fields.FloatField(required=True)
-    """
-    The cumulative amount of the agent administered over the
-    course of the duration, normalized by weight.
-    
-    For chemotherapy, the field unit is milligrams per kilogram
-    (mg/kg).
-    
-    For radiotherapy, the field unit is Greys per kilogram (Gy/kg).
-    
-    Radiation fractions and daily chemotherapy dosages are not tracked.
-    """
-
-    start_date = fields.DateTimeField()
-    """The first date the agent is administered."""
-
-    duration = fields.IntField()
-    """
-    The span in days during which the agent is administered.
-    """
-
-
 class Agent(mongoengine.EmbeddedDocument):
     """A treatment agent, e.g. drug or radiation."""
 
@@ -68,6 +40,34 @@ class Radiation(Agent):
 class OtherAgent(Agent):
 
     name = fields.StringField(required=True)
+
+
+class Dosage(mongoengine.EmbeddedDocument):
+    """The agent dosage."""
+
+    agent = fields.EmbeddedDocumentField(Agent, required=True)
+    """The administered Drug or Radiation."""
+
+    amount = fields.FloatField(required=True)
+    """
+    The cumulative amount of the agent administered over the
+    course of the duration, normalized by weight.
+    
+    For chemotherapy, the field unit is milligrams per kilogram
+    (mg/kg).
+    
+    For radiotherapy, the field unit is Greys per kilogram (Gy/kg).
+    
+    Radiation fractions and daily chemotherapy dosages are not tracked.
+    """
+
+    start_date = fields.DateTimeField()
+    """The first date the agent is administered."""
+
+    duration = fields.IntField()
+    """
+    The span in days during which the agent is administered.
+    """
 
 
 class Treatment(mongoengine.EmbeddedDocument):

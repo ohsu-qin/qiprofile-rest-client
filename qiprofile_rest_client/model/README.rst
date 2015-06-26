@@ -1,7 +1,8 @@
 Model Development Notes
 =======================
 
-* mongoengine 0.8.7 has the following bug:
+* mongoengine 0.8.7, and probably later versions, has the following
+  bug:
   
   Each mongoengine non-embedded class embedded field must specify
   a class by reference rather than name, e.g.::
@@ -12,6 +13,7 @@ Model Development Notes
   rather than::
 
       class SessionDetail(mongoengine.Document):
+          # Don't do this!
           volumes = fields.ListField(field=mongoengine.EmbeddedDocumentField('Volume'))
 
   If the class is referenced by name, then the model is initialized, but

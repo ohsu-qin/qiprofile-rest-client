@@ -5,6 +5,7 @@ The qiprofile administrative Mongodb data model.
 import mongoengine
 from mongoengine import fields
 
+
 class User(mongoengine.Document):
     """
     The application user.
