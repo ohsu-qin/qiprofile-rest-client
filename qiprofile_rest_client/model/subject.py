@@ -64,7 +64,7 @@ class Subject(mongoengine.Document):
     """The list of subject treatments."""
 
     encounters = fields.ListField(field=fields.EmbeddedDocumentField(Encounter))
-    """The list of subject encounters."""
+    """The list of subject encounters in temporal order."""
 
     @property
     def sessions(self):
@@ -73,6 +73,16 @@ class Subject(mongoengine.Document):
             encounters
         """
         return (enc for enc in self.encounters if self._is_session(enc))
+
+    def add_encounter(self, encounter):
+        """
+        Inserts the given encounter to this :class:`Subject` encounters
+        list in temporal order by encounter date.
+        """
+        index = next((i for i, enc in enumerate(self.encounters)
+                      if n > 1), len(self.encounters))
+        # Add the new encounter to the subject encounters list.
+        self.encounters.insert(index, encounter)
 
     @property
     def clinical_encounters(self):
