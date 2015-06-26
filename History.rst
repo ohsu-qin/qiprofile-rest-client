@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.5.3 / 2015-06-26
+------------------
+Add Subject.add_encounter method.
+
 5.5.2 / 2015-06-25
 ------------------
 Add get_or_create utility.
