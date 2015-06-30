@@ -80,7 +80,7 @@ class Subject(mongoengine.Document):
         list in temporal order by encounter date.
         """
         index = next((i for i, enc in enumerate(self.encounters)
-                      if n > 1), len(self.encounters))
+                      if enc.date > encounter.date), len(self.encounters))
         # Add the new encounter to the subject encounters list.
         self.encounters.insert(index, encounter)
 

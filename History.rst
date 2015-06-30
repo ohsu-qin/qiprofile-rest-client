@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.5.4 / 2015-06-30
+------------------
+Fix Subject.add_encounter.
+
 5.5.3 / 2015-06-26
 ------------------
 Add Subject.add_encounter method.

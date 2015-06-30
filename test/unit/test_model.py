@@ -3,6 +3,7 @@ from mongoengine import (connect, ValidationError)
 from nose.tools import (assert_true, assert_false, assert_equal, assert_raises)
 from qiprofile_rest_client.helpers import database
 from qiprofile_rest_client.model.subject import Subject
+from qiprofile_rest_client.model.encounter import Encounter
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol, LabelMap,
     VoxelSize, SessionDetail, Volume, Point, Region, Modeling, ModelingProtocol
@@ -153,18 +154,29 @@ class TestModel(object):
        pass
 
     def test_session(self):
-        # The session parent.
+        # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
-        # The session.
+        # The test session.
         date = datetime(2013, 1, 4)
         session = Session(date=date)
         # Validate the subject and embedded session.
         subject.encounters = [session]
         subject.validate()
 
+    def test_add_encounter(self):
+        # The test subject.
+        subject = Subject(project='QIN_Test', collection='Breast', number=1)
+        # Add the test encounters.
+        encounters = [Encounter(date=datetime(2014, m, 1)) for m in (3, 5, 7)]
+        subject.add_encounter(encounters[1])
+        assert_equal(subject.encounters, encounters[1:2])
+        subject.add_encounter(encounters[0])
+        assert_equal(subject.encounters, encounters[0:2])
+        subject.add_encounter(encounters[2])
+        assert_equal(subject.encounters, encounters)
 
     def test_modeling(self):
-        # The session subject.
+        # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The modeling protocol must exist.
         mdl_pcl = database.get_or_create(ModelingProtocol,
