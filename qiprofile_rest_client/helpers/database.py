@@ -1,6 +1,6 @@
 """Mongo Engine interaction utilities."""
 
-def get_or_create(klass, pk, **non_pk):
+def get_or_create(klass, key=None, **non_key):
     """
     This function stands in for the Mongo Engine ``get_or_create``
     collection method which was deprecated in mongoengine v0.8.0
@@ -25,16 +25,21 @@ def get_or_create(klass, pk, **non_pk):
     
         ValueError: update only works with $ operators
 
-    The work-around to the StackOverflow work-around is to use
-    call *update* rather than *modify*.
+    The work-around to the StackOverflow work-around is to call
+    the data model class *update_one* method rather than *modify*.
 
     :param klass: the Mongo Engine data model class
-    :param pk: the primary key {attribute: value} dictionary
-    :param non_pk: the non-key {attribute: value} dictionary
+    :param key: the secondary field key {attribute: value}
+        dictionary, or None if no fields comprise a secondary key
+    :param non_key: the non-key {attribute: value} dictionary
     :return: the existing or new object
     """
     try:
-        return klass.objects.get(**pk)
+        # Search by primary key.
+        return klass.objects.get(**key)
     except klass.DoesNotExist:
-        mod_opts = {'set__' + attr: val for attr, val in non_pk.iteritems()}
-        return klass.objects(**pk).update_one(upsert=True, **mod_opts)
+        # Create the new object as an upsert. Specify the MongoDB Engine
+        # set__*attribute* modification options for each non-primary
+        # key (attribute, value) pair.
+        mod_opts = {'set__' + attr: val for attr, val in non_key.iteritems()}
+        return klass.objects(**key).update_one(upsert=True, **mod_opts)
