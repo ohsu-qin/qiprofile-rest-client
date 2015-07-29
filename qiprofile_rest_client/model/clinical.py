@@ -6,7 +6,7 @@ import re
 import mongoengine
 from mongoengine import (fields, ValidationError)
 from .. import choices
-from .encounter import Encounter
+from .common import (Encounter, Outcome, TumorExtent)
 
 POS_NEG_CHOICES = [(True, 'Positive'), (False, 'Negative')]
 """The Boolean choices for Positive/Negative display values."""
@@ -91,13 +91,7 @@ class Treatment(mongoengine.EmbeddedDocument):
     )
 
 
-class Outcome(mongoengine.EmbeddedDocument):
-    """The patient clinical outcome."""
-
-    meta = dict(allow_inheritance=True)
-
-
-class Grade(Outcome):
+class Grade(mongoengine.EmbeddedDocument):
     """
     The abstract tumor grade superclass, specialized for each
     tumor type.
@@ -505,7 +499,7 @@ class BreastNormalizedAssay(mongoengine.EmbeddedDocument):
     invasion = fields.EmbeddedDocumentField(Invasion)
 
 
-class BreastGeneticExpression(mongoengine.EmbeddedDocument):
+class BreastGeneticExpression(Outcome):
     """The breast patient genetic expression results."""
 
     HER2_NEU_IHC_CHOICES = [(0, '0'), (1, '1+'), (2, '2+'), (3, '3+')]
@@ -530,21 +524,24 @@ class Evaluation(mongoengine.EmbeddedDocument):
     meta = dict(allow_inheritance=True)
 
 
-class GenericEvaluation(Evaluation):
-    """An unconstrained set of outcomes."""
-
-    outcomes = fields.ListField(fields.EmbeddedDocumentField(Outcome))
-
-
-class Pathology(Evaluation):
-    """The patient pathology summary."""
+class TumorPathology(mongoengine.EmbeddedDocument):
+    """The tumor-specific pathology."""
 
     meta = dict(allow_inheritance=True)
 
     tnm = fields.EmbeddedDocumentField(TNM)
+    
+    extent = fields.EmbeddedDocumentField(TumorExtent)
+    """The tumor extent measured by the pathologist."""
 
 
-class BreastPathology(Pathology):
+class PathologyReport(Evaluation):
+    """The patient pathology report findings."""
+
+    tumors = fields.ListField(fields.EmbeddedDocumentField(TumorPathology))
+
+
+class BreastPathology(TumorPathology):
     """The QIN breast patient pathology summary."""
 
     hormone_receptors = fields.ListField(
@@ -554,7 +551,7 @@ class BreastPathology(Pathology):
     genetic_expression = fields.EmbeddedDocumentField(BreastGeneticExpression)
 
 
-class SarcomaPathology(Pathology):
+class SarcomaPathology(TumorPathology):
     """The QIN sarcoma patient pathology summary."""
 
     HISTOLOGY_CHOICES = ('Carcinosarcoma', 'Cerebellar', 'Chondrosarcoma',
@@ -575,7 +572,7 @@ class Biopsy(Encounter):
     Non-therapeutic tissue extraction resulting in a pathology report.
     """
 
-    pathology = fields.EmbeddedDocumentField(Pathology, required=True)
+    pathology = fields.EmbeddedDocumentField(PathologyReport, required=True)
 
 
 class Surgery(Encounter):
@@ -585,13 +582,7 @@ class Surgery(Encounter):
 
     meta = dict(allow_inheritance=True)
 
-    pathology = fields.EmbeddedDocumentField(Pathology)
-
-
-class Assessment(Encounter):
-    """Generic collection of outcomes."""
-
-    evaluation = fields.EmbeddedDocumentField(GenericEvaluation)
+    pathology = fields.EmbeddedDocumentField(PathologyReport)
 
 
 class BreastSurgery(Surgery):

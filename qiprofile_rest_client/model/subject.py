@@ -6,7 +6,7 @@ import re
 import mongoengine
 from mongoengine import (fields, signals)
 from .. import choices
-from .encounter import Encounter
+from .common import Encounter
 from .imaging import (Scan, Session)
 from .clinical import Treatment
 
