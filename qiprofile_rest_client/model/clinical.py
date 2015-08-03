@@ -3,6 +3,7 @@ The qiprofile clinical Mongodb data model.
 """
 
 import re
+import math
 import mongoengine
 from mongoengine import (fields, ValidationError)
 from .. import choices
@@ -532,13 +533,35 @@ class TumorPathology(mongoengine.EmbeddedDocument):
     tnm = fields.EmbeddedDocumentField(TNM)
     
     extent = fields.EmbeddedDocumentField(TumorExtent)
-    """The tumor extent measured by the pathologist."""
+    """The primary tumor bed volume measured by the pathologist."""
 
 
 class PathologyReport(Evaluation):
     """The patient pathology report findings."""
 
     tumors = fields.ListField(fields.EmbeddedDocumentField(TumorPathology))
+
+
+class ResidualCancerBurden(mongoengine.EmbeddedDocument):
+    """The residual cancer burden after neodjuvant treatment."""
+
+    tumor_cell_density = fields.IntField()
+    """The primary tumor bed cancer cellularity percent."""
+
+    dcis_cell_density = fields.IntField()
+    """
+    The percent of the primary tumor bed that contains invasive
+    carcinoma.
+    """
+
+    positive_node_count = fields.IntField()
+    """The number of metastasized adjacent lymph nodes."""
+
+    total_node_count = fields.IntField()
+    """The total number of adjacent lymph nodes."""
+
+    largest_nodal_metastasis_length = fields.IntField()
+    """The diameter of the largest adjacent lymph node metastasis."""
 
 
 class BreastPathology(TumorPathology):
@@ -549,6 +572,45 @@ class BreastPathology(TumorPathology):
     )
 
     genetic_expression = fields.EmbeddedDocumentField(BreastGeneticExpression)
+
+    rcb = fields.EmbeddedDocumentField(ResidualCancerBurden)
+
+    def rcb_index(self):
+        """
+        Returns the RCB index per
+        `JCO 25:28 4414-4422 <http://jco.ascopubs.org/content/25/28/4414.full>`_.
+        """
+        # The bidimensional tumor size metric.
+        size = math.sqrt(self.extent.length * self.extent.width)
+        # The overall tumor cellularity.
+        overall = float(self.rcb.tumor_cell_density) / 100
+        # The in situ cellularity.
+        in_situ = float(self.rcb.dcis_cell_density) / 100
+        # The invasive carcinoma proportion.
+        invasion = (1 - in_situ) * overall
+
+        return (
+            (1.4 * math.pow(invasion * size, 0.17)) + 
+            pow(4 * ((1 - pow(0.75, self.rcb.positive_node_count)) *
+                     self.rcb.largest_nodal_metastasis_length),
+                0.17)
+        )
+
+    def rcb_class(self, rcb_index):
+        """
+        Returns the RCB class per the cut-offs defined in
+        `JCO 25:28 4414-4422 <http://jco.ascopubs.org/content/25/28/4414.full>`_.
+        
+        :param rcb_index: the :meth:`rcb_index` value
+        """
+        if rcb_index == 0:
+            return 0
+        elif rcb_index < 1.36:
+            return 1
+        elif rcb_index < 3.28:
+            return 2
+        else:
+            return 3
 
 
 class SarcomaPathology(TumorPathology):
