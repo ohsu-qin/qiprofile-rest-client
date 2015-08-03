@@ -8,7 +8,7 @@ from numbers import Number
 import mongoengine
 from mongoengine import (fields, signals, ValidationError)
 from .. import choices
-from .encounter import Encounter
+from .common import (Encounter, Outcome, TumorExtent)
 
 
 class VoxelSize(mongoengine.EmbeddedDocument):
@@ -88,7 +88,7 @@ class Volume(mongoengine.EmbeddedDocument):
     """The image signal intensity over the entire volume."""
 
 
-class ImageSequence(mongoengine.EmbeddedDocument):
+class ImageSequence(Outcome):
     """The scan or registration image volume container."""
 
     meta = dict(allow_inheritance=True)
@@ -185,7 +185,7 @@ class Scan(ImageSequence):
     """The bolus arrival volume index."""
 
     rois = fields.ListField(fields.EmbeddedDocumentField(Region))
-    """The image regions of interest. There is one ROI per scan lesion."""
+    """The image regions of interest. There is one ROI per scan tumor."""
 
     registrations = fields.ListField(
         field=fields.EmbeddedDocumentField(Registration)
@@ -221,7 +221,7 @@ class ModelingProtocol(mongoengine.Document):
     """
 
 
-class Modeling(mongoengine.EmbeddedDocument):
+class Modeling(Outcome):
     """
     The QIN pharmicokinetic modeling run on an image sequence.
     """
@@ -363,7 +363,12 @@ class Session(Encounter):
         field=fields.EmbeddedDocumentField(Modeling)
     )
     """The modeling performed on the session."""
-    
+
+    tumor_extents = fields.ListField(
+        field=fields.EmbeddedDocumentField(TumorExtent)
+    )
+    """The tumor extents measured from the scan."""
+
     detail = fields.ReferenceField(SessionDetail)
     """The session detail reference."""
 

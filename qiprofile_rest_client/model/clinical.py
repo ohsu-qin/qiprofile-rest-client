@@ -3,10 +3,11 @@ The qiprofile clinical Mongodb data model.
 """
 
 import re
+import math
 import mongoengine
 from mongoengine import (fields, ValidationError)
 from .. import choices
-from .encounter import Encounter
+from .common import (Encounter, Outcome, TumorExtent)
 
 POS_NEG_CHOICES = [(True, 'Positive'), (False, 'Negative')]
 """The Boolean choices for Positive/Negative display values."""
@@ -91,13 +92,7 @@ class Treatment(mongoengine.EmbeddedDocument):
     )
 
 
-class Outcome(mongoengine.EmbeddedDocument):
-    """The patient clinical outcome."""
-
-    meta = dict(allow_inheritance=True)
-
-
-class Grade(Outcome):
+class Grade(mongoengine.EmbeddedDocument):
     """
     The abstract tumor grade superclass, specialized for each
     tumor type.
@@ -505,7 +500,7 @@ class BreastNormalizedAssay(mongoengine.EmbeddedDocument):
     invasion = fields.EmbeddedDocumentField(Invasion)
 
 
-class BreastGeneticExpression(mongoengine.EmbeddedDocument):
+class BreastGeneticExpression(Outcome):
     """The breast patient genetic expression results."""
 
     HER2_NEU_IHC_CHOICES = [(0, '0'), (1, '1+'), (2, '2+'), (3, '3+')]
@@ -530,21 +525,46 @@ class Evaluation(mongoengine.EmbeddedDocument):
     meta = dict(allow_inheritance=True)
 
 
-class GenericEvaluation(Evaluation):
-    """An unconstrained set of outcomes."""
-
-    outcomes = fields.ListField(fields.EmbeddedDocumentField(Outcome))
-
-
-class Pathology(Evaluation):
-    """The patient pathology summary."""
+class TumorPathology(mongoengine.EmbeddedDocument):
+    """The tumor-specific pathology."""
 
     meta = dict(allow_inheritance=True)
 
     tnm = fields.EmbeddedDocumentField(TNM)
+    
+    extent = fields.EmbeddedDocumentField(TumorExtent)
+    """The primary tumor bed volume measured by the pathologist."""
 
 
-class BreastPathology(Pathology):
+class PathologyReport(Evaluation):
+    """The patient pathology report findings."""
+
+    tumors = fields.ListField(fields.EmbeddedDocumentField(TumorPathology))
+
+
+class ResidualCancerBurden(mongoengine.EmbeddedDocument):
+    """The residual cancer burden after neodjuvant treatment."""
+
+    tumor_cell_density = fields.IntField()
+    """The primary tumor bed cancer cellularity percent."""
+
+    dcis_cell_density = fields.IntField()
+    """
+    The percent of the primary tumor bed that contains invasive
+    carcinoma.
+    """
+
+    positive_node_count = fields.IntField()
+    """The number of metastasized adjacent lymph nodes."""
+
+    total_node_count = fields.IntField()
+    """The total number of adjacent lymph nodes."""
+
+    largest_nodal_metastasis_length = fields.IntField()
+    """The diameter of the largest adjacent lymph node metastasis."""
+
+
+class BreastPathology(TumorPathology):
     """The QIN breast patient pathology summary."""
 
     hormone_receptors = fields.ListField(
@@ -553,8 +573,47 @@ class BreastPathology(Pathology):
 
     genetic_expression = fields.EmbeddedDocumentField(BreastGeneticExpression)
 
+    rcb = fields.EmbeddedDocumentField(ResidualCancerBurden)
 
-class SarcomaPathology(Pathology):
+    def rcb_index(self):
+        """
+        Returns the RCB index per
+        `JCO 25:28 4414-4422 <http://jco.ascopubs.org/content/25/28/4414.full>`_.
+        """
+        # The bidimensional tumor size metric.
+        size = math.sqrt(self.extent.length * self.extent.width)
+        # The overall tumor cellularity.
+        overall = float(self.rcb.tumor_cell_density) / 100
+        # The in situ cellularity.
+        in_situ = float(self.rcb.dcis_cell_density) / 100
+        # The invasive carcinoma proportion.
+        invasion = (1 - in_situ) * overall
+
+        return (
+            (1.4 * math.pow(invasion * size, 0.17)) + 
+            pow(4 * ((1 - pow(0.75, self.rcb.positive_node_count)) *
+                     self.rcb.largest_nodal_metastasis_length),
+                0.17)
+        )
+
+    def rcb_class(self, rcb_index):
+        """
+        Returns the RCB class per the cut-offs defined in
+        `JCO 25:28 4414-4422 <http://jco.ascopubs.org/content/25/28/4414.full>`_.
+        
+        :param rcb_index: the :meth:`rcb_index` value
+        """
+        if rcb_index == 0:
+            return 0
+        elif rcb_index < 1.36:
+            return 1
+        elif rcb_index < 3.28:
+            return 2
+        else:
+            return 3
+
+
+class SarcomaPathology(TumorPathology):
     """The QIN sarcoma patient pathology summary."""
 
     HISTOLOGY_CHOICES = ('Carcinosarcoma', 'Cerebellar', 'Chondrosarcoma',
@@ -575,7 +634,7 @@ class Biopsy(Encounter):
     Non-therapeutic tissue extraction resulting in a pathology report.
     """
 
-    pathology = fields.EmbeddedDocumentField(Pathology, required=True)
+    pathology = fields.EmbeddedDocumentField(PathologyReport, required=True)
 
 
 class Surgery(Encounter):
@@ -585,13 +644,7 @@ class Surgery(Encounter):
 
     meta = dict(allow_inheritance=True)
 
-    pathology = fields.EmbeddedDocumentField(Pathology)
-
-
-class Assessment(Encounter):
-    """Generic collection of outcomes."""
-
-    evaluation = fields.EmbeddedDocumentField(GenericEvaluation)
+    pathology = fields.EmbeddedDocumentField(PathologyReport)
 
 
 class BreastSurgery(Surgery):

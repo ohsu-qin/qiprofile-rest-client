@@ -1,19 +1,21 @@
 from datetime import datetime
 from mongoengine import (connect, ValidationError)
-from nose.tools import (assert_true, assert_false, assert_equal, assert_raises)
+from nose.tools import (assert_true, assert_false, assert_equal,
+                        assert_almost_equal, assert_raises)
 from qiprofile_rest_client.helpers import database
 from qiprofile_rest_client.model.subject import Subject
-from qiprofile_rest_client.model.encounter import Encounter
+from qiprofile_rest_client.model.common import (Encounter, TumorExtent)
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol, LabelMap,
     VoxelSize, SessionDetail, Volume, Point, Region, Modeling, ModelingProtocol
 )
 from qiprofile_rest_client.model.clinical import (
-    Biopsy, Evaluation, Surgery, BreastSurgery, BreastPathology,
-    SarcomaPathology, TNM, ModifiedBloomRichardsonGrade,
-    HormoneReceptorStatus, FNCLCCGrade, NecrosisPercentValue,
+    Biopsy, Evaluation, Surgery, PathologyReport, TNM, BreastSurgery,
+    BreastPathology, ResidualCancerBurden, ModifiedBloomRichardsonGrade,
+    HormoneReceptorStatus, SarcomaPathology,FNCLCCGrade, NecrosisPercentValue,
     NecrosisPercentRange, necrosis_percent_as_score
 )
+
 
 
 class TestModel(object):
@@ -23,106 +25,155 @@ class TestModel(object):
     """
     def setup(self):
         connect(db='qiprofile_test')
- 
+
     def test_subject(self):
         subject = Subject(project='QIN_Test', number=1)
         # The subject must have a collection.
         with assert_raises(ValidationError):
             subject.validate()
-
+    
         subject.collection='Breast'
         subject.validate()
-
+    
     def test_race(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         subject.races = ['White', 'Black', 'Asian', 'AIAN', 'NHOPI']
         subject.validate()
-
+    
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         subject.races = ['Invalid']
         with assert_raises(ValidationError):
             subject.validate()
-
+    
         # Races must be a list.
         subject.races = 'White'
         with assert_raises(ValidationError):
             subject.validate()
-
+    
     def test_ethnicity(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         subject.ethnicity = 'Non-Hispanic'
         subject.validate()
-
+    
         # The ethnicity is a controlled value.
         subject.ethnicity = 'Invalid'
         with assert_raises(ValidationError):
             subject.validate()
-
+    
     def test_biopsy(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The pathology.
         size = TNM.Size.parse('T3a')
+        size.validate()
         grade = ModifiedBloomRichardsonGrade(
             tubular_formation=2, nuclear_pleomorphism=1, mitotic_count=2
         )
+        grade.validate()
         tnm = TNM(tumor_type='Breast', grade=grade, size=size,
                   metastasis=False, resection_boundaries=1,
                   lymphatic_vessel_invasion=False)
-        estrogen=HormoneReceptorStatus(hormone='estrogen', positive=True,
-                                       intensity=80)
-        hormone_receptors = [estrogen]
-        pathology = BreastPathology(tnm=tnm,
-                                    hormone_receptors=hormone_receptors)
+        tnm.validate()
+        estrogen1 = HormoneReceptorStatus(hormone='estrogen', positive=True,
+                                          intensity=80)
+        estrogen1.validate()
+        hormone_receptors1 = [estrogen1]
+        extent1 = TumorExtent(length=48, width=31, depth=19)
+        extent1.validate()
+        tumor1_pathology = BreastPathology(tnm=tnm, extent=extent1,
+                                            hormone_receptors=hormone_receptors1)
+        tumor1_pathology.validate()
+        estrogen2 = HormoneReceptorStatus(hormone='estrogen', positive=False)
+        estrogen2.validate()
+        hormone_receptors2 = [estrogen2]
+        extent2 = TumorExtent(length=27, width=16, depth=8)
+        extent2.validate()
+        tumor2_pathology = BreastPathology(extent=extent2,
+                                            hormone_receptors=hormone_receptors2)
+        tumor2_pathology.validate()
+        # The pathology aggregate.
+        pathology = PathologyReport(tumors=[tumor1_pathology, tumor2_pathology])
+        pathology.validate()
         # Add the encounter to the subject.
         date = datetime(2013, 1, 4)
         biopsy = Biopsy(date=date, weight=54, pathology=pathology)
+        biopsy.validate()
         subject.encounters = [biopsy]
-        # Validate the subject and embedded biopsy.
         subject.validate()
+
+    def test_rcb_index(self):
+        extent = TumorExtent(length=32, width=12)
+        rcb = ResidualCancerBurden(
+                tumor_cell_density=40,
+                dcis_cell_density=10,
+                positive_node_count=6,
+                largest_nodal_metastasis_length=8
+            )
+        path = BreastPathology(extent=extent, rcb=rcb)
+        rcb_index = path.rcb_index()
+        assert_almost_equal(rcb_index, 3.695, 3,
+                            msg="The RCB index is incorrect: %f" % rcb_index)
+
+    def test_rcb_class(self):
+        path = BreastPathology()
+        for expected, rcb_index in enumerate((0, 1.2, 1.4, 3.5)):
+            actual = path.rcb_class(rcb_index)
+            assert_equal(actual, expected,
+                         "The RCB class of RCB index %f is incorrect: %d" % 
+                        (rcb_index, actual))
 
     def test_breast_surgery(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The pathology.
         size = TNM.Size.parse('T2')
+        size.validate()
         grade = ModifiedBloomRichardsonGrade(
             tubular_formation=1, nuclear_pleomorphism=1, mitotic_count=1
         )
+        grade.validate()
         tnm = TNM(tumor_type='Breast', grade=grade, size=size,
                   metastasis=False, resection_boundaries=1,
                   lymphatic_vessel_invasion=False)
-        pathology = BreastPathology(tnm=tnm)
+        tnm.validate()
+        pathology = PathologyReport(tumors=[BreastPathology(tnm=tnm)])
+        pathology.validate()
         # Add the encounter to the subject.
         date = datetime(2013, 1, 4)
         surgery = BreastSurgery(date=date, weight=54, surgery_type='Lumpectomy',
                                pathology=pathology)
+        surgery.validate()
         subject.encounters = [surgery]
-        # Validate the subject and embedded surgery.
         subject.validate()
-
+    
     def test_sarcoma_surgery(self):
         subject = Subject(project='QIN_Test', collection='Sarcoma', number=1)
         # The pathology.
         size = TNM.Size.parse('T3a')
+        size.validate()
         grade = FNCLCCGrade(
             differentiation=2, necrosis_score=1, mitotic_count=1
         )
+        grade.validate()
         tnm = TNM(tumor_type='Sarcoma', grade=grade, size=size,
                   metastasis=False, resection_boundaries=1,
                   lymphatic_vessel_invasion=False)
-        pathology = SarcomaPathology(tnm=tnm, location='Thigh')
+        tnm.validate()
+        pathology = PathologyReport(tumors=[SarcomaPathology(tnm=tnm, location='Thigh')])
+        pathology.validate()
         # Add the encounter to the subject.
         date = datetime(2014, 6, 19)
         surgery = Surgery(date=date, weight=47, pathology=pathology)
+        surgery.validate()
         subject.encounters = [surgery]
-        # Validate the subject and embedded surgery.
         subject.validate()
-
+    
     def test_tnm_size(self):
         for value in ['T1', 'Tx', 'cT4', 'T1b', 'cT2a']:
             size = TNM.Size.parse(value)
+            size.validate()
             assert_equal(str(size), value, "The TNM parse is incorrect -"
                                            " expected %s, found %s"
                                            % (value, str(size)))
+
 
     def test_necrosis_score(self):
         fixture = {
@@ -148,21 +199,21 @@ class TestModel(object):
                 assert_equal(actual, expected,
                              "The necrosis score for %s is incorrect: %d" %
                              (in_val, expected))
-
+    
     def test_treatment(self):
        # TODO - add the treatment test case.
        pass
-
+    
     def test_session(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The test session.
         date = datetime(2013, 1, 4)
         session = Session(date=date)
-        # Validate the subject and embedded session.
+        session.validate()
         subject.encounters = [session]
         subject.validate()
-
+    
     def test_add_encounter(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
@@ -174,7 +225,7 @@ class TestModel(object):
         assert_equal(subject.encounters, encounters[0:2])
         subject.add_encounter(encounters[2])
         assert_equal(subject.encounters, encounters)
-
+    
     def test_modeling(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
@@ -189,12 +240,14 @@ class TestModel(object):
         ktrans = Modeling.ParameterResult(filename='/path/to/ktrans.nii.gz')
         modeling = Modeling(protocol=mdl_pcl, source=source, resource='pk_01',
                             result=dict(ktrans=ktrans))
-        # Validate the subject and embedded session modeling.
+        modeling.validate()
+        # Validate the subject embedded session modeling.
         date = datetime(2014, 3, 1)
         session = Session(date=date, modelings=[modeling])
+        session.validate()
         subject.encounters = [session]
         subject.validate()
-
+    
     def test_scan(self):
         # The scan protocol.
         voxel_size = VoxelSize(width=2, depth=4, spacing=2.4)
@@ -205,39 +258,42 @@ class TestModel(object):
                                           voxel_size=voxel_size)
         # The scan.
         scan = Scan(protocol=protocol, number=1)
-        # Validate the session detail and embedded scan.
+        scan.validate()
+        # Validate the session detail embedded scan.
         detail = SessionDetail(scans=[scan])
         detail.validate()
-
+    
     def test_bolus_arrival(self):
         # The scan protocol.
         protocol = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         # The scan with a bogus bolus arrival.
         scan = Scan(protocol=protocol, number=1, bolus_arrival_index=4)
-        # The detail object.
-        detail = SessionDetail(scans=[scan])
         # The bolus arrival index must refer to an existing volume.
         with assert_raises(ValidationError):
+            scan.validate()
+        # The detail object.
+        detail = SessionDetail(scans=[scan])
+        with assert_raises(ValidationError):
             detail.validate()
-
+    
         # The scan volumes.
         vol_fmt = "volume%03d.nii.gz"
         create_volume = lambda number: Volume(filename=vol_fmt % number)
         scan.volumes = [create_volume(i + 1) for i in range(32)]
         # The bolus arrival is now valid.
         detail.validate()
-
+    
         # The bolus arrival index must refer to a volume.
         scan.bolus_arrival_index = 32
         with assert_raises(ValidationError):
             detail.validate()
-
+    
     def test_registration(self):
         # The scan protocol.
         scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
-
+        scan.validate()
         # The registration protocol.
         reg_params = dict(transforms=['Rigid', 'Affine', 'SyN'])
         reg_pcl = database.get_or_create(RegistrationProtocol,
@@ -245,29 +301,33 @@ class TestModel(object):
                                          parameters=reg_params)
         # The registration.
         reg = Registration(protocol=reg_pcl, resource='reg_h3Fk5')
-
+        reg.validate()
+    
         # Validate the session detail and embedded scan registration.
         scan.registrations = [reg]
         detail = SessionDetail(scans=[scan])
         detail.scans = [scan]
         detail.validate()
-
+    
     def test_roi(self):
         # The scan protocol.
         scan_pcl = database.get_or_create(ScanProtocol,
                                           dict(scan_type='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
-
+        scan.validate()
+    
         # The ROI.
         mask = '/path/to/mask.nii.gz'
         label_map = LabelMap(filename='/path/to/label_map.nii.gz',
                              color_table='/path/to/color_table.nii.gz')
+        label_map.validate()
         centroid = Point(x=200, y=230, z=400)
         intensity = 31
         roi = Region(mask=mask, label_map=label_map, centroid=centroid,
                      average_intensity=intensity)
-
+        roi.validate()
+        
         # Validate the session detail and embedded scan ROI.
         scan.rois = [roi]
         detail = SessionDetail(scans=[scan])

@@ -1,6 +1,14 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.6.2 / 2015-08-02
+------------------
+Add RCB to BreastPathology.
+
+5.6.1 / 2015-07-28
+------------------
+Separate pathology into tumors.
+
 5.5.4 / 2015-06-30
 ------------------
 Fix Subject.add_encounter.
