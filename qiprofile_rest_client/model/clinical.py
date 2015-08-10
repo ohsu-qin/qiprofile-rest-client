@@ -555,13 +555,13 @@ class ResidualCancerBurden(mongoengine.EmbeddedDocument):
     """
 
     positive_node_count = fields.IntField()
-    """The number of metastasized adjacent lymph nodes."""
+    """The number of metastasized axillary lymph nodes."""
 
     total_node_count = fields.IntField()
-    """The total number of adjacent lymph nodes."""
+    """The total number of axillary lymph nodes."""
 
     largest_nodal_metastasis_length = fields.IntField()
-    """The diameter of the largest adjacent lymph node metastasis."""
+    """The diameter of the largest axillary lymph node metastasis."""
 
 
 class BreastPathology(TumorPathology):
