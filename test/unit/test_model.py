@@ -4,18 +4,19 @@ from nose.tools import (assert_true, assert_false, assert_equal,
                         assert_almost_equal, assert_raises)
 from qiprofile_rest_client.helpers import database
 from qiprofile_rest_client.model.subject import Subject
-from qiprofile_rest_client.model.common import (Encounter, TumorExtent)
+from qiprofile_rest_client.model.common import TumorExtent
 from qiprofile_rest_client.model.imaging import (
-    Session, Scan, ScanProtocol, Registration, RegistrationProtocol, LabelMap,
-    VoxelSize, SessionDetail, Volume, Point, Region, Modeling, ModelingProtocol
+    Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
+    LabelMap, VoxelSize, SessionDetail, Volume, Point, Region,
+    Modeling, ModelingProtocol
 )
 from qiprofile_rest_client.model.clinical import (
-    Biopsy, Evaluation, Surgery, PathologyReport, TNM, BreastSurgery,
-    BreastPathology, ResidualCancerBurden, ModifiedBloomRichardsonGrade,
-    HormoneReceptorStatus, SarcomaPathology,FNCLCCGrade, NecrosisPercentValue,
+    Biopsy, Evaluation, Surgery, PathologyReport, TumorLocation,
+    TNM, BreastSurgery, BreastPathology, ResidualCancerBurden,
+    ModifiedBloomRichardsonGrade, HormoneReceptorStatus,
+    SarcomaPathology, FNCLCCGrade, NecrosisPercentValue,
     NecrosisPercentRange, necrosis_percent_as_score
 )
-
 
 
 class TestModel(object):
@@ -31,7 +32,6 @@ class TestModel(object):
         # The subject must have a collection.
         with assert_raises(ValidationError):
             subject.validate()
-    
         subject.collection='Breast'
         subject.validate()
     
@@ -60,7 +60,12 @@ class TestModel(object):
         with assert_raises(ValidationError):
             subject.validate()
     
-    def test_biopsy(self):
+    def test_breast_biopsy(self):
+        """
+        This Breast biopsy test case is a variation of the Breast
+        surgery test case. Notably, this test case exercises multiple
+        tumors. There is no Sarcoma biopsy test case.
+        """
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The pathology.
         size = TNM.Size.parse('T3a')
@@ -123,7 +128,8 @@ class TestModel(object):
 
     def test_breast_surgery(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
-        # The pathology.
+
+        # The pathology report.
         size = TNM.Size.parse('T2')
         size.validate()
         grade = ModifiedBloomRichardsonGrade(
@@ -134,8 +140,13 @@ class TestModel(object):
                   metastasis=False, resection_boundaries=1,
                   lymphatic_vessel_invasion=False)
         tnm.validate()
-        pathology = PathologyReport(tumors=[BreastPathology(tnm=tnm)])
+        location = TumorLocation(sagittal_location='Left')
+        location.validate()
+        tumor_pathology = BreastPathology(tnm=tnm, location=location)
+        tumor_pathology.validate()
+        pathology = PathologyReport(tumors=[tumor_pathology])
         pathology.validate()
+
         # Add the encounter to the subject.
         date = datetime(2013, 1, 4)
         surgery = BreastSurgery(date=date, weight=54, surgery_type='Lumpectomy',
@@ -146,7 +157,8 @@ class TestModel(object):
     
     def test_sarcoma_surgery(self):
         subject = Subject(project='QIN_Test', collection='Sarcoma', number=1)
-        # The pathology.
+        
+        # The pathology report.
         size = TNM.Size.parse('T3a')
         size.validate()
         grade = FNCLCCGrade(
@@ -157,8 +169,14 @@ class TestModel(object):
                   metastasis=False, resection_boundaries=1,
                   lymphatic_vessel_invasion=False)
         tnm.validate()
-        pathology = PathologyReport(tumors=[SarcomaPathology(tnm=tnm, location='Thigh')])
+        location = TumorLocation(body_part='Thigh', sagittal_location='Left',
+                                 coronal_location='Posterior')
+        location.validate()
+        tumor_pathology = SarcomaPathology(tnm=tnm, location=location)
+        tumor_pathology.validate()
+        pathology = PathologyReport(tumors=[tumor_pathology])
         pathology.validate()
+
         # Add the encounter to the subject.
         date = datetime(2014, 6, 19)
         surgery = Surgery(date=date, weight=47, pathology=pathology)
@@ -218,7 +236,7 @@ class TestModel(object):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # Add the test encounters.
-        encounters = [Encounter(date=datetime(2014, m, 1)) for m in (3, 5, 7)]
+        encounters = [Biopsy(date=datetime(2014, m, 1)) for m in (3, 5, 7)]
         subject.add_encounter(encounters[1])
         assert_equal(subject.encounters, encounters[1:2])
         subject.add_encounter(encounters[0])

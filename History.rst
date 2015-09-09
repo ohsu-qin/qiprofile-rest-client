@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.6.3 / 2015-09-09
+------------------
+* Qualify tumor location.
+
 5.6.2 / 2015-08-02
 ------------------
 Add RCB to BreastPathology.

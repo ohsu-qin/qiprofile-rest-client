@@ -525,10 +525,32 @@ class Evaluation(mongoengine.EmbeddedDocument):
     meta = dict(allow_inheritance=True)
 
 
+class TumorLocation(mongoengine.EmbeddedDocument):
+    """The tumor body part and directional orientation."""
+
+    SAGITTAL_CHOICES = ('Left', 'Right')
+
+    CORONAL_CHOICES = ('Anterior', 'Posterior')
+
+    body_part = fields.StringField()
+    """
+    The capitalized body part, e.g. ``Thigh``.
+    
+    This field is only required when the tumor type is not localized
+    to a body part, e.g. sarcoma.
+    """
+
+    sagittal_location = fields.StringField(choices=SAGITTAL_CHOICES)
+
+    coronal_location = fields.StringField(choices=CORONAL_CHOICES)
+
+
 class TumorPathology(mongoengine.EmbeddedDocument):
     """The tumor-specific pathology."""
 
     meta = dict(allow_inheritance=True)
+
+    location = fields.EmbeddedDocumentField(TumorLocation)
 
     tnm = fields.EmbeddedDocumentField(TNM)
     
@@ -621,8 +643,6 @@ class SarcomaPathology(TumorPathology):
                          'Leiomyosarcoma', 'Liposarcoma', 'MFH', 'MPNST',
                          'Osteosarcoma', 'Rhabdomyosarcoma', 'Synovial', 'Other')
     """The histology controlled values."""
-
-    location = fields.StringField()
 
     histology = fields.StringField(choices=HISTOLOGY_CHOICES)
 
