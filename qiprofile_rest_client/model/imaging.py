@@ -252,7 +252,7 @@ class Modeling(Outcome):
         abstract superclass of ScanProtocol and RegistrationProtocol.
         This Source embedded document introduces a disambiguation
         level by creating a disjunction object that can either hold
-        a *registration* reference or a *scan* reference.
+        a *scan reference or a *registration* reference.
         """
 
         scan = fields.ReferenceField(ScanProtocol)
@@ -263,7 +263,16 @@ class Modeling(Outcome):
     """The modeling protocol."""
 
     source = fields.EmbeddedDocumentField(Source, required=True)
-    """The modeling source protocol."""
+    """
+    The modeling source protocol.
+    
+    Since a given :class`Session` contains only one :class:`ImageSequence`
+    per source protocol, the image sequence on which modeling is performed
+    is determined by the source protocol. Specifying the source as a
+    protocol rather than the specific scan or registration allows modeling
+    to be embedded in the :class`Session` document rather than the
+    :class:`SessionDetail`.
+    """
 
     resource = fields.StringField(required=True)
     """The modeling imaging store resource name, e.g. ``pk_R3y9``."""
