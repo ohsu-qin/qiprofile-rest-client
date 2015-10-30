@@ -1,6 +1,6 @@
 """Mongo Engine interaction utilities."""
 
-def get_or_create(klass, key=None, **non_key):
+def get_or_create(klass, key, **non_key):
     """
     This function stands in for the Mongo Engine ``get_or_create``
     collection method which was deprecated in mongoengine v0.8.0
@@ -8,12 +8,12 @@ def get_or_create(klass, key=None, **non_key):
     support transactions.
     
     If there is an object of the given Mongo Engine data model
-    class which matches the primary key, then that object is
+    class which matches the given secondary key, then that object is
     returned. Otherwise, a new object is created with the content
     prescribed by both the primary and non-primary parameters.
     
-    The create step is an upsert, i.e. a new object is created only
-    if it does not yet exist. The upsert allows for the small
+    The create step is an upsert, i.e. a new object is created if
+    and only if it does not yet exist. The upsert allows for the small
     possibility that an object is created after the fetch attempt
     but before the create attempt. In that situation, the existing
     object non-key content is modified and the modified object is
@@ -29,8 +29,7 @@ def get_or_create(klass, key=None, **non_key):
     the data model class *update_one* method rather than *modify*.
 
     :param klass: the Mongo Engine data model class
-    :param key: the secondary field key {attribute: value}
-        dictionary, or None if no fields comprise a secondary key
+    :param key: the secondary key {attribute: value} dictionary
     :param non_key: the non-key {attribute: value} dictionary
     :return: the existing or new object
     """
