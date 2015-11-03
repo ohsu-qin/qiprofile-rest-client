@@ -247,10 +247,11 @@ class TestModel(object):
     def test_modeling(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
-        # The modeling protocol must exist.
-        mdl_pcl = database.get_or_create(ModelingProtocol,
-                                         dict(technique='Bolero'),
-                                         input_parameters=dict(r10_val=0.7))
+        # The modeling protocol secondary key.
+        key = dict(technique='Bolero')
+        r1_params = dict(r10_val=0.7, baseline_end_idx=1)
+        mdl_pcl = database.get_or_create(ModelingProtocol, key,
+                                         r1_parameters=r1_params)
         # The source protocol.
         scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         source = Modeling.Source(scan=scan_pcl)
