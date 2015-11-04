@@ -310,11 +310,9 @@ class TestModel(object):
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
         scan.validate()
-        # The registration protocol search key.
-        reg_params = dict(transforms=['Rigid', 'Affine', 'SyN'])
+        # The registration protocol.
         reg_pcl = database.get_or_create(RegistrationProtocol,
-                                         dict(technique='ANTS'),
-                                         parameters=reg_params)
+                                         dict(technique='ANTS'))
         # The registration.
         reg = Registration(protocol=reg_pcl, resource='reg_h3Fk5')
         reg.validate()
