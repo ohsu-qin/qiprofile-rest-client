@@ -247,11 +247,8 @@ class TestModel(object):
     def test_modeling(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
-        # The modeling protocol secondary key.
-        key = dict(technique='Bolero')
-        r1_params = dict(r10_val=0.7, baseline_end_idx=1)
-        mdl_pcl = database.get_or_create(ModelingProtocol, key,
-                                         r1_parameters=r1_params)
+        # The modeling protocol.
+        mdl_pcl = database.get_or_create(ModelingProtocol, dict(technique='dummy'))
         # The source protocol.
         scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         source = Modeling.Source(scan=scan_pcl)
@@ -313,7 +310,7 @@ class TestModel(object):
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
         scan.validate()
-        # The registration protocol.
+        # The registration protocol search key.
         reg_params = dict(transforms=['Rigid', 'Affine', 'SyN'])
         reg_pcl = database.get_or_create(RegistrationProtocol,
                                          dict(technique='ANTS'),
