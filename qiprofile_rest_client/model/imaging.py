@@ -215,14 +215,12 @@ class ModelingProtocol(mongoengine.Document):
     The modeling algorithm or framework, e.g. ``Tofts``.
     """
 
-    r1_parameters = fields.DictField()
+    parameters = fields.DictField()
     """
-    The modeling execution R1 input {*parameter*: *value*} dictionary.
-    """
+    The modeling execution {*parameter*\ : *value*\ } dictionary, where
+    *value* is a primitive or a dictionary, e.g.:
 
-    fastfit_parameters = fields.DictField()
-    """
-    The modeling execution fastfit input {*parameter*: *value*} dictionary.
+        {'r1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
     """
 
 

@@ -25,7 +25,11 @@ class TestModel(object):
     server TestSeed test suite.
     """
     def setup(self):
-        connect(db='qiprofile_test')
+        self._connection = connect(db='qiprofile_test')
+        self._connection.drop_database('qiprofile_test')
+
+    def tearDown(self):
+        self._connection.drop_database('qiprofile_test')
 
     def test_subject(self):
         subject = Subject(project='QIN_Test', number=1)
@@ -244,26 +248,6 @@ class TestModel(object):
         subject.add_encounter(encounters[2])
         assert_equal(subject.encounters, encounters)
     
-    def test_modeling(self):
-        # The test subject.
-        subject = Subject(project='QIN_Test', collection='Breast', number=1)
-        # The modeling protocol.
-        mdl_pcl = database.get_or_create(ModelingProtocol, dict(technique='dummy'))
-        # The source protocol.
-        scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
-        source = Modeling.Source(scan=scan_pcl)
-        # The modeling data.
-        ktrans = Modeling.ParameterResult(filename='/path/to/ktrans.nii.gz')
-        modeling = Modeling(protocol=mdl_pcl, source=source, resource='pk_01',
-                            result=dict(ktrans=ktrans))
-        modeling.validate()
-        # Validate the subject embedded session modeling.
-        date = datetime(2014, 3, 1)
-        session = Session(date=date, modelings=[modeling])
-        session.validate()
-        subject.encounters = [session]
-        subject.validate()
-    
     def test_scan(self):
         # The scan protocol.
         voxel_size = VoxelSize(width=2, depth=4, spacing=2.4)
@@ -347,6 +331,37 @@ class TestModel(object):
         detail = SessionDetail(scans=[scan])
         detail.scans = [scan]
         detail.validate()
+    
+    def test_modeling_protocol(self):
+        # The modeling protocol.
+        r1_params = dict(r1_0_val=0.7, baseline_end_idx=1)
+        mdl_params = dict(r1=r1_params)
+        key = dict(technique='dummy', parameters=mdl_params)
+        mdl_pcl = database.get_or_create(ModelingProtocol, key)
+        assert_equal(mdl_pcl.parameters, mdl_params,
+                     "The fetched modeling parameters are incorrect: %s" %
+                     mdl_pcl.parameters)
+
+    def test_modeling(self):
+        # The test subject.
+        subject = Subject(project='QIN_Test', collection='Breast', number=1)
+        # The modeling protocol.
+        mdl_pcl = database.get_or_create(ModelingProtocol,
+                                         dict(technique='dummy'))
+        # The source protocol.
+        scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
+        source = Modeling.Source(scan=scan_pcl)
+        # The modeling data.
+        ktrans = Modeling.ParameterResult(filename='/path/to/ktrans.nii.gz')
+        modeling = Modeling(protocol=mdl_pcl, source=source, resource='pk_01',
+                            result=dict(ktrans=ktrans))
+        modeling.validate()
+        # Validate the subject embedded session modeling.
+        date = datetime(2014, 3, 1)
+        session = Session(date=date, modelings=[modeling])
+        session.validate()
+        subject.encounters = [session]
+        subject.validate()
 
 if __name__ == "__main__":
     import nose
