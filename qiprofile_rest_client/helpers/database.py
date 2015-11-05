@@ -20,13 +20,14 @@ def get_or_create(klass, key, **non_key):
     returned.
     
     :Note: The idiom used in this function modifies the solution
-    proposed in http://stackoverflow.com/questions/25846462/mongoengine-replacing-get-or-create-with-upsert-update-one/25863633#25863633.
-    That StackOverflow work-around returns the following error:
+        proposed in
+        http://stackoverflow.com/questions/25846462/mongoengine-replacing-get-or-create-with-upsert-update-one/25863633#25863633.
+        That StackOverflow work-around returns the following error:
     
-        ValueError: update only works with $ operators
+            ValueError: update only works with $ operators
 
-    The work-around to the StackOverflow work-around is to call
-    the data model class *update_one* method rather than *modify*.
+        The work-around to the StackOverflow work-around is to call
+        the data model class *update_one* method rather than *modify*.
 
     :param klass: the Mongo Engine data model class
     :param key: the secondary key {attribute: value} dictionary
@@ -38,7 +39,13 @@ def get_or_create(klass, key, **non_key):
         return klass.objects.get(**key)
     except klass.DoesNotExist:
         # Create the new object as an upsert. Specify the MongoDB Engine
-        # set__*attribute* modification options for each non-primary
-        # key (attribute, value) pair.
-        mod_opts = {'set__' + attr: val for attr, val in non_key.iteritems()}
-        return klass.objects(**key).update_one(upsert=True, **mod_opts)
+        # set__*attribute* modification options for both the key and
+        # non-key {attribute: value} dictionaries.
+        content = key.copy()
+        content.update(non_key)
+        mod_opts = {'set__' + attr: val for attr, val in content.iteritems()}
+        result = klass.objects(**key).update_one(upsert=True, full_result=True,
+                                                 **mod_opts)
+        # The object now exists, so fetch it by id.
+        # The new object id is returned in the result upserted item.
+        return klass.objects.get(id=result['upserted'])
