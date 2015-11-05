@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.7.1 / 2015-10-04
+------------------
+* Generalize the modeling protocol parameters.
+
 5.6.3 / 2015-09-09
 ------------------
 * Qualify tumor location.
