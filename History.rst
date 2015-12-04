@@ -1,7 +1,15 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
-5.7.1 / 2015-10-04
+5.8.1 / 2015-12-03
+------------------
+* The ModelingProtocol consists of the configuration field.
+
+5.7.2 / 2015-11-04
+------------------
+* Update the model doc.
+
+5.7.1 / 2015-11-04
 ------------------
 * Generalize the modeling protocol parameters.
 
