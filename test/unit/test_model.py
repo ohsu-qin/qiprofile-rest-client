@@ -333,21 +333,23 @@ class TestModel(object):
         detail.validate()
     
     def test_modeling_protocol(self):
-        # The modeling protocol.
-        r1_params = dict(r1_0_val=0.7, baseline_end_idx=1)
-        mdl_params = dict(r1=r1_params)
-        key = dict(technique='dummy', parameters=mdl_params)
-        mdl_pcl = database.get_or_create(ModelingProtocol, key)
-        assert_equal(mdl_pcl.parameters, mdl_params,
-                     "The fetched modeling parameters are incorrect: %s" %
-                     mdl_pcl.parameters)
+        # The modeling protocol content.
+        cfg = {'Fastfit': {'model_name': 'fxr.model'},
+               'R1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
+        mdl_pcl_key = dict(configuration=cfg)
+        mdl_pcl = database.get_or_create(ModelingProtocol, mdl_pcl_key)
+        assert_equal(mdl_pcl.configuration, cfg,
+                     "The fetched modeling configuration is incorrect: %s" %
+                     mdl_pcl.configuration)
 
     def test_modeling(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         # The modeling protocol.
-        mdl_pcl = database.get_or_create(ModelingProtocol,
-                                         dict(technique='dummy'))
+        cfg = {'Fastfit': {'model_name': 'fxr.model'},
+               'R1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
+        mdl_pcl_key = dict(configuration=cfg)
+        mdl_pcl = database.get_or_create(ModelingProtocol, mdl_pcl_key)
         # The source protocol.
         scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         source = Modeling.Source(scan=scan_pcl)

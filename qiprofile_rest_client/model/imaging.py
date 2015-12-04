@@ -182,10 +182,16 @@ class Scan(ImageSequence):
     """The scan acquisition protocol."""
 
     bolus_arrival_index = fields.IntField()
-    """The bolus arrival volume index."""
+    """
+    The bolus arrival volume index, or None if this is not a
+    DCE scan.
+    """
 
     rois = fields.ListField(fields.EmbeddedDocumentField(Region))
-    """The image regions of interest. There is one ROI per scan tumor."""
+    """
+    The image regions of interest. For a scan with ROIs, there is
+    one ROI per scan tumor.
+    """
 
     registrations = fields.ListField(
         field=fields.EmbeddedDocumentField(Registration)
@@ -197,7 +203,7 @@ class Scan(ImageSequence):
     def clean(self):
         """Verify that the bolus arrival index references a volume,."""
         arv = self.bolus_arrival_index
-        if arv:
+        if arv != None:
             if not self.volumes:
                 raise ValidationError("Session does not have a volume")
             if arv < 0 or arv >= len(self.volumes):
@@ -206,21 +212,19 @@ class Scan(ImageSequence):
 
 
 class ModelingProtocol(mongoengine.Document):
-    """The modeling procedure inputs."""
+    """The modeling input options."""
 
     meta = dict(collection='qiprofile_modeling_protocol')
 
-    technique = fields.StringField(required=True)
+    configuration = fields.DictField()
     """
-    The modeling algorithm or framework, e.g. ``Tofts``.
-    """
+    The modeling {*section*\ : {*option*\ : *value*\ }} dictionary,
+    e.g.::
 
-    parameters = fields.DictField()
-    """
-    The modeling execution {*parameter*\ : *value*\ } dictionary, where
-    *value* is a primitive or a dictionary, e.g.:
-
-        {'r1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
+        {'Fastfit': {'model_name': 'fxr.model'},
+         'R1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
+    
+    for the ``Fastfit`` modeling interface with the given options.
     """
 
 
