@@ -59,7 +59,9 @@ class LabelMap(mongoengine.EmbeddedDocument):
     """The label map file path relative to the web app root."""
 
     color_table = fields.StringField()
-    """The color map lookup table file path relative to the web app root."""
+    """
+    The color map lookup table file path relative to the web app root.
+    """
 
 
 class Region(mongoengine.EmbeddedDocument):
@@ -69,7 +71,7 @@ class Region(mongoengine.EmbeddedDocument):
     """The binary mask file name."""
 
     label_map = fields.EmbeddedDocumentField(LabelMap)
-    """The label map file name."""
+    """The region overlay :class:`LabelMap` object."""
 
     centroid = mongoengine.EmbeddedDocumentField(Point)
     """The region centroid."""
@@ -130,9 +132,6 @@ class ScanProtocol(mongoengine.Document):
 
     meta = dict(collection='qiprofile_scan_protocol')
 
-    ORIENTATION = ['axial', 'sagittal', 'coronal']
-    """The three imaging axes."""
-
     scan_type = fields.StringField(required=True)
     """
     The scan type designation controlled value, e.g. ``T1``. The REST update
@@ -141,25 +140,12 @@ class ScanProtocol(mongoengine.Document):
     ``T2`` and ``T2W`` should all resolve to scan type ``T2``.
     """
 
-    orientation = fields.StringField(choices=ORIENTATION,
-                                     max_length=choices.max_length(ORIENTATION))
-    """The imaging :const:`ORIENTATION` controlled value."""
-
     technique = fields.StringField()
     """
     The scan technique, e.g. ``STIR``, ``FLAIR`` or ``BLISS``. The REST update
     client is responsible for ensuring that technique synonyms resolve to the
     same technique value, e.g. scans with descriptions including ``BLISS`` and
     ``BLISS_AUTO_SENSE`` should both resolve to technique ``BLISS``.
-    """
-
-    description = fields.StringField()
-    """
-    The image acquisition scan description, e.g. ``T1 AX SPIN ECHO``.
-    This field is customarily specified as the DICOM
-    *Series Description* or *Protocol Name* tag. This field is often
-    used by the REST update client to infer the controlled vocabulary
-    scan type, orientation and technique field values.
     """
 
     voxel_size = fields.EmbeddedDocumentField(VoxelSize)
@@ -181,6 +167,9 @@ class Scan(ImageSequence):
     protocol = fields.ReferenceField(ScanProtocol, required=True)
     """The scan acquisition protocol."""
 
+    preview = fields.StringField()
+    """The image file pathname relative to the web app root."""
+
     bolus_arrival_index = fields.IntField()
     """
     The bolus arrival volume index, or None if this is not a
@@ -190,7 +179,9 @@ class Scan(ImageSequence):
     rois = fields.ListField(fields.EmbeddedDocumentField(Region))
     """
     The image regions of interest. For a scan with ROIs, there is
-    one ROI per scan tumor.
+    one ROI per scan tumor. The rois list order is the same as the
+    :class:`qiprofile-rest-client.model.clinical.PathologyReport`
+    ``tumors`` list order.
     """
 
     registrations = fields.ListField(
