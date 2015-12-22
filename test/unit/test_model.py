@@ -89,7 +89,7 @@ class TestModel(object):
         extent1 = TumorExtent(length=48, width=31, depth=19)
         extent1.validate()
         tumor1_pathology = BreastPathology(tnm=tnm, extent=extent1,
-                                            hormone_receptors=hormone_receptors1)
+                                           hormone_receptors=hormone_receptors1)
         tumor1_pathology.validate()
         estrogen2 = HormoneReceptorStatus(hormone='estrogen', positive=False)
         estrogen2.validate()
@@ -97,7 +97,7 @@ class TestModel(object):
         extent2 = TumorExtent(length=27, width=16, depth=8)
         extent2.validate()
         tumor2_pathology = BreastPathology(extent=extent2,
-                                            hormone_receptors=hormone_receptors2)
+                                           hormone_receptors=hormone_receptors2)
         tumor2_pathology.validate()
         # The pathology aggregate.
         pathology = PathologyReport(tumors=[tumor1_pathology, tumor2_pathology])
