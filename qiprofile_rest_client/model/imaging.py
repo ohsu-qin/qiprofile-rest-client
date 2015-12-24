@@ -7,30 +7,7 @@ import decimal
 from numbers import Number
 import mongoengine
 from mongoengine import (fields, signals, ValidationError)
-from .. import choices
 from .common import (Encounter, Outcome, TumorExtent)
-
-
-class VoxelSize(mongoengine.EmbeddedDocument):
-    """The voxel width, depth and spacing."""
-
-    width = fields.FloatField()
-    """
-    The voxel width (= voxel length) in millimeters. For an MR, the width
-    is the DICOM Pixel Spacing value.
-    """
-
-    depth = fields.FloatField()
-    """
-    The voxel depth in millimeters. For an MR, the depth is the DICOM
-    Slice Thickness.
-    """
-
-    spacing = fields.FloatField()
-    """
-    The inter-slice spacing in millimeters. For an MR, the spacing is
-    the DICOM Spacing Between Slices.
-    """
 
 
 class Point(mongoengine.EmbeddedDocument):
@@ -55,12 +32,16 @@ class Point(mongoengine.EmbeddedDocument):
 class LabelMap(mongoengine.EmbeddedDocument):
     """A label map with an optional associated color lookup table."""
 
-    filename = fields.StringField(required=True)
-    """The label map file path relative to the web app root."""
+    name = fields.StringField(required=True)
+    """
+    The label map file base name relative to the XNAT archive
+    ROI resource location.
+    """
 
     color_table = fields.StringField()
     """
-    The color map lookup table file path relative to the web app root.
+    The color map lookup table file base name relative to the XNAT
+    archive ROI resource location.
     """
 
 
@@ -68,7 +49,10 @@ class Region(mongoengine.EmbeddedDocument):
     """The 3D region in volume voxel space."""
 
     mask = fields.StringField()
-    """The binary mask file name."""
+    """
+    The binary mask file base name relative to the XNAT archive
+    ROI resource location.
+    """
 
     label_map = fields.EmbeddedDocumentField(LabelMap)
     """The region overlay :class:`LabelMap` object."""
@@ -83,8 +67,11 @@ class Region(mongoengine.EmbeddedDocument):
 class Volume(mongoengine.EmbeddedDocument):
     """The 3D image volume."""
 
-    filename = fields.StringField(required=True)
-    """The image file pathname relative to the web app root."""
+    name = fields.StringField(required=True)
+    """
+    The image file base name relative to the XNAT archive 3D volume
+    resource location.
+    """
 
     average_intensity = fields.FloatField()
     """The image signal intensity over the entire volume."""
@@ -148,9 +135,6 @@ class ScanProtocol(mongoengine.Document):
     ``BLISS_AUTO_SENSE`` should both resolve to technique ``BLISS``.
     """
 
-    voxel_size = fields.EmbeddedDocumentField(VoxelSize)
-    """The voxel size in millimeters."""
-
 
 class Scan(ImageSequence):
     """
@@ -168,7 +152,10 @@ class Scan(ImageSequence):
     """The scan acquisition protocol."""
 
     preview = fields.StringField()
-    """The image file pathname relative to the web app root."""
+    """
+    The image file base name relative to the XNAT archive scan
+    preview resource location.
+    """
 
     bolus_arrival_index = fields.IntField()
     """
@@ -227,8 +214,10 @@ class Modeling(Outcome):
     class ParameterResult(mongoengine.EmbeddedDocument):
         """The output for a given modeling run result parameter."""
 
-        filename = fields.StringField(required=True)
-        """The voxel-wise mapping file path relative to the web app root."""
+        name = fields.StringField(required=True)
+        """
+        The voxel-wise mapping file name relative to the XNAT
+        modeling archive resource location."""
 
         average = fields.FloatField()
         """The average parameter value over all voxels."""
@@ -316,17 +305,18 @@ class Modeling(Outcome):
     then a REST database update client might calculate the average |Ktrans|
     and |chisq| values and populate the REST database as follows::
 
-        t1 = ScanProtocol.get_or_create(scan_type='T1',
-                                        defaults=dict(orientation='axial'))
-        tofts = ModelingProtocol.get_or_create(technique='Tofts')
+        from qiprofile_rest_client.helpers import database
+        t1 = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
+        tofts = database.get_or_create(ModelingProtocol,
+                                       dict(technique='Tofts'))
         ktrans_label_map = LabelMap(filename='k_trans_overlay.nii.gz',
                                     color_table='jet.txt')
-        ktrans = Modeling.ParameterResult(filename='k_trans.nii.gz',
+        ktrans = Modeling.ParameterResult(name='k_trans.nii.gz',
                                           average=k_trans_avg,
                                           label_map=ktrans_label_map)
         chisq_label_map = LabelMap(filename='k_trans_overlay.nii.gz',
                                    color_table='jet.txt')
-        chisq = Modeling.ParameterResult(filename='chi_sq.nii.gz',
+        chisq = Modeling.ParameterResult(name='chi_sq.nii.gz',
                                          average=chi_sq_avg,
                                          label_map=chisq_label_map)
         result = dict(ktrans=ktrans, chisq=chisq)

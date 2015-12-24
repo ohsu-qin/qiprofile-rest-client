@@ -7,8 +7,8 @@ from qiprofile_rest_client.model.subject import Subject
 from qiprofile_rest_client.model.common import TumorExtent
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
-    LabelMap, VoxelSize, SessionDetail, Volume, Point, Region,
-    Modeling, ModelingProtocol
+    LabelMap, SessionDetail, Volume, Point, Region, Modeling,
+    ModelingProtocol
 )
 from qiprofile_rest_client.model.clinical import (
     Biopsy, Evaluation, Surgery, PathologyReport, TumorLocation,
@@ -250,12 +250,8 @@ class TestModel(object):
     
     def test_scan(self):
         # The scan protocol.
-        voxel_size = VoxelSize(width=2, depth=4, spacing=2.4)
-        protocol = database.get_or_create(ScanProtocol,
-                                          dict(scan_type='T1'),
-                                          orientation='axial',
-                                          description='T1 AX SPIN ECHO',
-                                          voxel_size=voxel_size)
+        pcl_key = dict(scan_type='T1')
+        protocol = database.get_or_create(ScanProtocol, pcl_key)
         # The scan.
         scan = Scan(protocol=protocol, number=1)
         scan.validate()
@@ -278,7 +274,7 @@ class TestModel(object):
     
         # The scan volumes.
         vol_fmt = "volume%03d.nii.gz"
-        create_volume = lambda number: Volume(filename=vol_fmt % number)
+        create_volume = lambda number: Volume(name=vol_fmt % number)
         scan.volumes = [create_volume(i + 1) for i in range(32)]
         # The bolus arrival is now valid.
         detail.validate()
@@ -316,9 +312,9 @@ class TestModel(object):
         scan.validate()
     
         # The ROI.
-        mask = '/path/to/mask.nii.gz'
-        label_map = LabelMap(filename='/path/to/label_map.nii.gz',
-                             color_table='/path/to/color_table.nii.gz')
+        mask = 'lesion1.nii.gz'
+        label_map = LabelMap(name='lesion1_color.nii.gz',
+                             color_table='color_table.nii.gz')
         label_map.validate()
         centroid = Point(x=200, y=230, z=400)
         intensity = 31
@@ -354,7 +350,7 @@ class TestModel(object):
         scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         source = Modeling.Source(scan=scan_pcl)
         # The modeling data.
-        ktrans = Modeling.ParameterResult(filename='/path/to/ktrans.nii.gz')
+        ktrans = Modeling.ParameterResult(name='ktrans.nii.gz')
         modeling = Modeling(protocol=mdl_pcl, source=source, resource='pk_01',
                             result=dict(ktrans=ktrans))
         modeling.validate()
