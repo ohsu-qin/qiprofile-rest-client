@@ -92,7 +92,7 @@ class RegistrationProtocol(mongoengine.Document):
     meta = dict(collection='qiprofile_registration_protocol')
 
     technique = fields.StringField(required=True)
-    """The registration technique, e.g. ``ANTS`` or ``FNIRT``."""
+    """The registration technique, e.g. ``ANTs`` or ``FNIRT``."""
 
     parameters = fields.DictField()
     """The registration input {parameter: value} dictionary."""
@@ -217,7 +217,8 @@ class Modeling(Outcome):
         name = fields.StringField(required=True)
         """
         The voxel-wise mapping file name relative to the XNAT
-        modeling archive resource location."""
+        modeling archive resource location.
+        """
 
         average = fields.FloatField()
         """The average parameter value over all voxels."""
