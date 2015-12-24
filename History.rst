@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.9.1 / 2015-12-23
+------------------
+* Change file_name field to name.
+
 5.8.1 / 2015-12-03
 ------------------
 * The ModelingProtocol consists of the configuration field.
