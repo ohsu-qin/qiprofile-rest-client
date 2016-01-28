@@ -69,8 +69,21 @@ class Volume(mongoengine.EmbeddedDocument):
 
     name = fields.StringField(required=True)
     """
-    The image file base name relative to the XNAT archive 3D volume
-    resource location.
+    The volume image file base name. The client has the responsibility
+    of obtaining the file based on the image store. For example, the
+    XNAT volume file is relative to the parent :class:`ImageSequence`
+    XNAT archive location, determined as follows::
+
+          /path/to/archive/<project>/arc001/<experiment>/SCANS/<scan>/<resource>
+          
+      where:
+      
+      * *project* is the XNAT project name
+      * *experiment* is the XNAT experiment label
+      * *scan* is the scan number
+      * *resource* is:
+        - ``NIFTI`` for a 3D NIfTI volume :class:`Scan` parent
+        - the *resource* field for a :class:`Registration` parent
     """
 
     average_intensity = fields.FloatField()
