@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.10.1 / 2016-02-03
+-------------------
+* Every protocol has a technique and configuration.
+
 5.9.1 / 2015-12-23
 ------------------
 * Change file_name field to name.

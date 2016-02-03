@@ -23,6 +23,8 @@ Model Development Notes
 
   The recommended pattern is to define every class before it is referenced.
 
+* MongoEngine does not 
+
 * Validation errors are often highly misleading. For example, when a
   Subject data object is created with the following content::
       subject
