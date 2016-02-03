@@ -250,8 +250,7 @@ class TestModel(object):
     
     def test_scan(self):
         # The scan protocol.
-        pcl_key = dict(scan_type='T1')
-        protocol = database.get_or_create(ScanProtocol, pcl_key)
+        protocol = database.get_or_create(ScanProtocol, dict(technique='T1'))
         # The scan.
         scan = Scan(protocol=protocol, number=1)
         scan.validate()
@@ -261,7 +260,7 @@ class TestModel(object):
     
     def test_bolus_arrival(self):
         # The scan protocol.
-        protocol = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
+        protocol = database.get_or_create(ScanProtocol, dict(technique='T1'))
         # The scan with a bogus bolus arrival.
         scan = Scan(protocol=protocol, number=1, bolus_arrival_index=4)
         # The bolus arrival index must refer to an existing volume.
@@ -286,13 +285,13 @@ class TestModel(object):
     
     def test_registration(self):
         # The scan protocol.
-        scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
+        scan_pcl = database.get_or_create(ScanProtocol, dict(technique='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
         scan.validate()
         # The registration protocol.
         reg_pcl = database.get_or_create(RegistrationProtocol,
-                                         dict(technique='ANTS'))
+                                         dict(technique='FLIRT'))
         # The registration.
         reg = Registration(protocol=reg_pcl, resource='reg_h3Fk5')
         reg.validate()
@@ -332,7 +331,7 @@ class TestModel(object):
         # The modeling protocol content.
         cfg = {'Fastfit': {'model_name': 'fxr.model'},
                'R1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
-        mdl_pcl_key = dict(configuration=cfg)
+        mdl_pcl_key = dict(technique='BOLERO', configuration=cfg)
         mdl_pcl = database.get_or_create(ModelingProtocol, mdl_pcl_key)
         assert_equal(mdl_pcl.configuration, cfg,
                      "The fetched modeling configuration is incorrect: %s" %
@@ -344,10 +343,10 @@ class TestModel(object):
         # The modeling protocol.
         cfg = {'Fastfit': {'model_name': 'fxr.model'},
                'R1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
-        mdl_pcl_key = dict(configuration=cfg)
+        mdl_pcl_key = dict(technique='BOLERO', configuration=cfg)
         mdl_pcl = database.get_or_create(ModelingProtocol, mdl_pcl_key)
         # The source protocol.
-        scan_pcl = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
+        scan_pcl = database.get_or_create(ScanProtocol, dict(technique='T1'))
         source = Modeling.Source(scan=scan_pcl)
         # The modeling data.
         ktrans = Modeling.ParameterResult(name='ktrans.nii.gz')
