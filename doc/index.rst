@@ -16,12 +16,14 @@ the `QuIP REST server`_.
 ************
 Installation
 ************
-1. Start the `QuIP REST server`_, if necessary.
+1. Install the `QuIP REST server`_.
 
 2. Add ``qiprofile-rest-client`` to your Python_ project setup.py
    ``install_requires``.
 
 3. Update your project installation to reflect the REST client dependency.
+
+4. Start the `QuIP REST server`_.
 
 
 *****
