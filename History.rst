@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.11.1 / 2016-02-22
+-------------------
+* Add the ImagingCollection.
+
 5.10.1 / 2016-02-03
 -------------------
 * Every protocol has a technique and configuration.
