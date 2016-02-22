@@ -3,7 +3,7 @@ from mongoengine import (connect, ValidationError)
 from nose.tools import (assert_true, assert_false, assert_equal,
                         assert_almost_equal, assert_raises)
 from qiprofile_rest_client.helpers import database
-from qiprofile_rest_client.model.subject import Subject
+from qiprofile_rest_client.model.subject import (ImagingCollection, Subject)
 from qiprofile_rest_client.model.common import TumorExtent
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
@@ -31,12 +31,20 @@ class TestModel(object):
     def tearDown(self):
         self._connection.drop_database('qiprofile_test')
 
+    def test_collection(self):
+        coll = ImagingCollection()
+        # The subject must have a collection.
+        with assert_raises(ValidationError):
+            coll.validate()
+        coll.name = 'Breast'
+        coll.validate()
+
     def test_subject(self):
         subject = Subject(project='QIN_Test', number=1)
         # The subject must have a collection.
         with assert_raises(ValidationError):
             subject.validate()
-        subject.collection='Breast'
+        subject.collection = 'Breast'
         subject.validate()
     
     def test_race(self):
@@ -305,7 +313,7 @@ class TestModel(object):
     def test_roi(self):
         # The scan protocol.
         scan_pcl = database.get_or_create(ScanProtocol,
-                                          dict(scan_type='T1'))
+                                          dict(technique='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
         scan.validate()

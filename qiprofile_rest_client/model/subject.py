@@ -11,10 +11,23 @@ from .imaging import (Scan, Session)
 from .clinical import Treatment
 
 
+class ImagingCollection(mongoengine.Document):
+    """The imaging collection."""
+
+    meta = dict(collection='qiprofile_collection')
+
+    name = fields.StringField(required=True)
+    """The required collection name."""
+
+    description = fields.StringField()
+    """The required short description."""
+
+    url = fields.IntField()
+    """The hyperlink url to additional information."""
+
+
 class Subject(mongoengine.Document):
-    """
-    The patient.
-    """
+    """The patient."""
 
     RACE_CHOICES = [('White', 'White'),
                     ('Black', 'Black or African American'),
