@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.11.2 / 2016-02-22
+-------------------
+* ImagingCollection url is a string.
+
 5.11.1 / 2016-02-22
 -------------------
 * Add the ImagingCollection.

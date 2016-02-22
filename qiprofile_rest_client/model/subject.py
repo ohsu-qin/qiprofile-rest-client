@@ -22,7 +22,7 @@ class ImagingCollection(mongoengine.Document):
     description = fields.StringField()
     """The required short description."""
 
-    url = fields.IntField()
+    url = fields.StringField()
     """The hyperlink url to additional information."""
 
 
