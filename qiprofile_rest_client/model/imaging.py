@@ -106,7 +106,7 @@ class Protocol(mongoengine.Document):
     
     meta = dict(allow_inheritance=True, collection='qiprofile_protocol')
     
-    technique = fields.StringField()
+    technique = fields.StringField(required=True)
     """
     The image acquisition or processing technique, e.g. ``T1`` for a 
     T1-weighted scan or 'ANTs' for an ANTs registration.
