@@ -16,6 +16,9 @@ class ImagingCollection(mongoengine.Document):
 
     meta = dict(collection='qiprofile_collection')
 
+    project = fields.StringField(required=True)
+    """The required project name."""
+
     name = fields.StringField(required=True)
     """The required collection name."""
 
