@@ -33,14 +33,26 @@ class TestModel(object):
 
     def test_collection(self):
         coll = ImagingCollection()
-        # The subject must have a collection.
+        # The collection must have a project.
+        with assert_raises(ValidationError):
+            coll.validate()
+        coll.project = 'QIN_Test'
+        # The collection must have a name.
         with assert_raises(ValidationError):
             coll.validate()
         coll.name = 'Breast'
         coll.validate()
 
     def test_subject(self):
-        subject = Subject(project='QIN_Test', number=1)
+        subject = Subject()
+        # The collection must have a project.
+        with assert_raises(ValidationError):
+            subject.validate()
+        subject.project = 'QIN_Test'
+        # The collection must have a number.
+        with assert_raises(ValidationError):
+            subject.validate()
+        subject.number = 1
         # The subject must have a collection.
         with assert_raises(ValidationError):
             subject.validate()
