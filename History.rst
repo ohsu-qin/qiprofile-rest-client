@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+5.11.3 / 2016-03-03
+-------------------
+* Relax the requirement versions.
+
 5.11.3 / 2016-02-22
 -------------------
 * ImagingCollection requires a project.
