@@ -616,13 +616,17 @@ class BreastPathology(TumorPathology):
         in_situ = float(self.rcb.dcis_cell_density) / 100
         # The invasive carcinoma proportion.
         invasion = (1 - in_situ) * overall
+        # The RCB index invasion component.
+        invasion_factor = 1.4 * math.pow(invasion * size, 0.17)
+        # The RCB index positive node component.
+        pos_node_factor = 1 - math.pow(0.75, self.rcb.positive_node_count)
+        # The base of the RCB index node component.
+        node_base = 4 * pos_node_factor * self.rcb.largest_nodal_metastasis_length
+        # The RCB index node component.
+        node_factor =  math.pow(node_base, 0.17)
 
-        return (
-            (1.4 * math.pow(invasion * size, 0.17)) + 
-            pow(4 * ((1 - pow(0.75, self.rcb.positive_node_count)) *
-                     self.rcb.largest_nodal_metastasis_length),
-                0.17)
-        )
+        # The RCB index is the sum of the invasion and node components.
+        return invasion_factor + node_factor 
 
     def rcb_class(self, rcb_index):
         """

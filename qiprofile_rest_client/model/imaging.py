@@ -34,7 +34,7 @@ class LabelMap(mongoengine.EmbeddedDocument):
     
     name = fields.StringField(required=True)
     """
-    The label map file base name relative to the XNAT archive
+    The label map file base name relative to the image store
     ROI resource location.
     """
     
@@ -50,7 +50,7 @@ class Region(mongoengine.EmbeddedDocument):
     
     mask = fields.StringField()
     """
-    The binary mask file base name relative to the XNAT archive
+    The binary mask file base name relative to the image store
     ROI resource location.
     """
     
@@ -64,39 +64,79 @@ class Region(mongoengine.EmbeddedDocument):
     """The average signal in the region."""
 
 
-class Volume(mongoengine.EmbeddedDocument):
-    """The 3D image volume."""
+class Image(mongoengine.EmbeddedDocument):
+    """The image file encapsulation."""
     
     name = fields.StringField(required=True)
     """
-    The volume image file base name. The client has the responsibility
-    of obtaining the file based on the image store. For example, the
-    XNAT volume file is relative to the parent :class:`ImageSequence`
-    XNAT archive location, determined as follows::
+    The image file base name. The client has the responsibility
+    of determining the image file based on the image store. For example,
+    a NIfTI scan volume XNAT 1.6 archive 3D volume image location is as
+    # follows::
           
-          /path/to/archive/<project>/arc001/<experiment>/SCANS/<scan>/<resource>
+          /path/to/archive/<project>/arc001/<experiment>/SCANS/<scan>/NIFTI/<name>
       
       where:
       
       * *project* is the XNAT project name
       * *experiment* is the XNAT experiment label
       * *scan* is the scan number
-      * *resource* is:
-        - ``NIFTI`` for a 3D NIfTI volume :class:`Scan` parent
-        - the *resource* field for a :class:`Registration` parent
+      * *name* is the volume image file base name
     """
     
     average_intensity = fields.FloatField()
-    """The image signal intensity over the entire volume."""
+    """The average image signal intensity."""
+
+
+class Resource(mongoengine.EmbeddedDocument):
+    """The image store file access abstraction."""
+
+    meta = dict(allow_inheritance=True)
+
+    name = fields.StringField(required=True)
+    """The image store name used to access the resource."""
+
+
+class SingleImageResource(Resource):
+    """A resource with one file."""
+
+    meta = dict(allow_inheritance=True)
+
+    image = fields.EmbeddedDocumentField(Image)
+    """The sole resource image."""
+
+
+class MultiImageResource(Resource):
+    """A resource with several files."""
+
+    meta = dict(allow_inheritance=True)
+
+    images = fields.ListField(
+        field=fields.EmbeddedDocumentField(Image)
+    )
+    """The resource images."""
+
+
+class TimeSeries(SingleImageResource):
+    """The time series resource."""
+    pass
+
+
+class Volumes(MultiImageResource):
+    """The volumes resource."""
+    pass
 
 
 class ImageSequence(Outcome):
-    """The scan or registration image volume container."""
-    
+    """The Scan or Registration."""
+
     meta = dict(allow_inheritance=True)
-    
-    volumes = fields.ListField(field=mongoengine.EmbeddedDocumentField(Volume))
+
+    volumes = fields.EmbeddedDocumentField(Volumes)
     """The 3D volume images in the sequence."""
+
+    time_series = fields.EmbeddedDocumentField(TimeSeries)
+    """The image sequence 4D time series resource."""
 
 
 class Protocol(mongoengine.Document):
@@ -176,9 +216,6 @@ class Registration(ImageSequence):
     
     protocol = fields.ReferenceField(RegistrationProtocol, required=True)
     """The registration protocol."""
-    
-    resource = fields.StringField(required=True)
-    """The registration imaging store resource name, e.g. ``reg_k3RtZ``."""
 
 
 class ScanProtocol(Protocol):
@@ -211,10 +248,10 @@ class Scan(ImageSequence):
     
     protocol = fields.ReferenceField(ScanProtocol, required=True)
     """The scan acquisition protocol."""
-    
+
     preview = fields.StringField()
     """
-    The image file base name relative to the XNAT archive scan
+    The image file base name relative to the image store scan
     preview resource location.
     """
     
@@ -224,7 +261,7 @@ class Scan(ImageSequence):
     DCE scan.
     """
     
-    rois = fields.ListField(fields.EmbeddedDocumentField(Region))
+    rois = fields.ListField(field=fields.EmbeddedDocumentField(Region))
     """
     The image regions of interest. For a scan with ROIs, there is
     one ROI per scan tumor. The rois list order is the same as the
@@ -245,7 +282,7 @@ class Scan(ImageSequence):
         if arv != None:
             if not self.volumes:
                 raise ValidationError("Session does not have a volume")
-            if arv < 0 or arv >= len(self.volumes):
+            if arv < 0 or arv >= len(self.volumes.images):
                 raise ValidationError(("Bolus arrival index does not refer"
                                        " to a valid volume index: %d") % arv)
 
@@ -273,7 +310,7 @@ class Modeling(Outcome):
         """The average parameter value over all voxels."""
         
         label_map = fields.EmbeddedDocumentField(LabelMap)
-        """The label map overlay NiFTI file."""
+        """The label map overlay NIfTI file."""
     
     class Source(mongoengine.EmbeddedDocument):
         """

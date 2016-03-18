@@ -7,7 +7,7 @@ from qiprofile_rest_client.model.subject import (ImagingCollection, Subject)
 from qiprofile_rest_client.model.common import TumorExtent
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
-    LabelMap, SessionDetail, Volume, Point, Region, Modeling,
+    LabelMap, SessionDetail, Image, Volumes, Point, Region, Modeling,
     ModelingProtocol
 )
 from qiprofile_rest_client.model.clinical import (
@@ -17,6 +17,8 @@ from qiprofile_rest_client.model.clinical import (
     SarcomaPathology, FNCLCCGrade, NecrosisPercentValue,
     NecrosisPercentRange, necrosis_percent_as_score
 )
+
+VOLUME_TMPL = "volume%03d.nii.gz"
 
 
 class TestModel(object):
@@ -216,7 +218,6 @@ class TestModel(object):
                                            " expected %s, found %s"
                                            % (value, str(size)))
 
-
     def test_necrosis_score(self):
         fixture = {
             0: dict(integer=0,
@@ -291,13 +292,12 @@ class TestModel(object):
         with assert_raises(ValidationError):
             detail.validate()
     
-        # The scan volumes.
-        vol_fmt = "volume%03d.nii.gz"
-        create_volume = lambda number: Volume(name=vol_fmt % number)
-        scan.volumes = [create_volume(i + 1) for i in range(32)]
+        # The scan images.
+        images = [Image(name=VOLUME_TMPL % i) for i in range(1, 32)]
+        scan.volumes = Volumes(name='NIFTI', images=images)
         # The bolus arrival is now valid.
         detail.validate()
-    
+
         # The bolus arrival index must refer to a volume.
         scan.bolus_arrival_index = 32
         with assert_raises(ValidationError):
@@ -312,8 +312,10 @@ class TestModel(object):
         # The registration protocol.
         reg_pcl = database.get_or_create(RegistrationProtocol,
                                          dict(technique='FLIRT'))
-        # The registration.
-        reg = Registration(protocol=reg_pcl, resource='reg_h3Fk5')
+        # The registration images.
+        images = [Image(name=VOLUME_TMPL % i) for i in range(1, 32)]
+        volumes = Volumes(name='reg_test', images=images)
+        reg = Registration(protocol=reg_pcl, volumes=volumes)
         reg.validate()
     
         # Validate the session detail and embedded scan registration.
