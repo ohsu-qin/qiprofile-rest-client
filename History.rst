@@ -1,7 +1,15 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
-5.11.3 / 2016-03-03
+5.12.1 / 2016-03-18
+-------------------
+* Make TimeSeries and Volumes Resource subclasses.
+
+5.11.5 / 2016-03-03
+-------------------
+* Replace corrupted PyPI release.
+
+5.11.4 / 2016-03-03
 -------------------
 * Relax the requirement versions.
 
