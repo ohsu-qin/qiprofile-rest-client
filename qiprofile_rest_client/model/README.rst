@@ -7,14 +7,12 @@ Model Development Notes
   Each mongoengine non-embedded class embedded field must specify
   a class by reference rather than name, e.g.::
   
-      class SessionDetail(mongoengine.Document):
-          volumes = fields.ListField(field=mongoengine.EmbeddedDocumentField(Volume))
+      volumes = fields.ListField(field=mongoengine.EmbeddedDocumentField(Image))
   
   rather than::
 
-      class SessionDetail(mongoengine.Document):
-          # Don't do this!
-          volumes = fields.ListField(field=mongoengine.EmbeddedDocumentField('Volume'))
+      # Don't do this!
+      volumes = fields.ListField(field=mongoengine.EmbeddedDocumentField('Image'))
 
   If the class is referenced by name, then the model is initialized, but
   an attempt to save an object results in the following validation error::
