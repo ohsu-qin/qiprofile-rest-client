@@ -29,43 +29,10 @@ class Point(mongoengine.EmbeddedDocument):
     """
 
 
-class LabelMap(mongoengine.EmbeddedDocument):
-    """A label map with an optional associated color lookup table."""
-    
-    name = fields.StringField(required=True)
-    """
-    The label map file base name relative to the image store
-    ROI resource location.
-    """
-    
-    color_table = fields.StringField()
-    """
-    The color map lookup table file base name relative to the XNAT
-    archive ROI resource location.
-    """
-
-
-class Region(mongoengine.EmbeddedDocument):
-    """The 3D region in volume voxel space."""
-    
-    mask = fields.StringField()
-    """
-    The binary mask file base name relative to the image store
-    ROI resource location.
-    """
-    
-    label_map = fields.EmbeddedDocumentField(LabelMap)
-    """The region overlay :class:`LabelMap` object."""
-    
-    centroid = mongoengine.EmbeddedDocumentField(Point)
-    """The region centroid."""
-    
-    average_intensity = fields.FloatField()
-    """The average signal in the region."""
-
-
 class Image(mongoengine.EmbeddedDocument):
     """The image file encapsulation."""
+    
+    meta = dict(allow_inheritance=True)
     
     name = fields.StringField(required=True)
     """
@@ -84,33 +51,62 @@ class Image(mongoengine.EmbeddedDocument):
       * *name* is the volume image file base name
     """
     
-    average_intensity = fields.FloatField()
-    """The average image signal intensity."""
+    metadata = fields.DictField()
+    """Additional image properties, e.g. average intensity."""
+
+
+class LabelMap(Image):
+    """A label map with an optional associated color lookup table."""
+    
+    color_table = fields.StringField()
+    """
+    The color map lookup table file base name relative to the XNAT
+    archive ROI resource location.
+    """
+
+
+class Region(mongoengine.EmbeddedDocument):
+    """The 3D region in volume voxel space."""
+    
+    mask = fields.EmbeddedDocumentField(Image)
+    """
+    The binary mask file relative to the image store ROI resource
+    location.
+    """
+    
+    resource = fields.StringField(required=True)
+    """The region imaging store resource name, e.g. ``roi``."""
+    
+    label_map = fields.EmbeddedDocumentField(LabelMap)
+    """The region overlay :class:`LabelMap` object."""
+    
+    centroid = mongoengine.EmbeddedDocumentField(Point)
+    """The region centroid."""
 
 
 class Resource(mongoengine.EmbeddedDocument):
     """The image store file access abstraction."""
-
+    
     meta = dict(allow_inheritance=True)
-
+    
     name = fields.StringField(required=True)
     """The image store name used to access the resource."""
 
 
 class SingleImageResource(Resource):
     """A resource with one file."""
-
+    
     meta = dict(allow_inheritance=True)
-
+    
     image = fields.EmbeddedDocumentField(Image)
     """The sole resource image."""
 
 
 class MultiImageResource(Resource):
     """A resource with several files."""
-
+    
     meta = dict(allow_inheritance=True)
-
+    
     images = fields.ListField(
         field=fields.EmbeddedDocumentField(Image)
     )
@@ -118,25 +114,20 @@ class MultiImageResource(Resource):
 
 
 class TimeSeries(SingleImageResource):
-    """The time series resource."""
-    pass
-
-
-class Volumes(MultiImageResource):
-    """The volumes resource."""
+    """
+    The time series resource. This resource includes a
+    4D:class:`Image`
+    """
     pass
 
 
 class ImageSequence(Outcome):
     """The Scan or Registration."""
-
+    
     meta = dict(allow_inheritance=True)
-
-    volumes = fields.EmbeddedDocumentField(Volumes)
-    """The 3D volume images in the sequence."""
-
+    
     time_series = fields.EmbeddedDocumentField(TimeSeries)
-    """The image sequence 4D time series resource."""
+    """The 4D time series resource."""
 
 
 class Protocol(mongoengine.Document):
@@ -148,7 +139,7 @@ class Protocol(mongoengine.Document):
     
     technique = fields.StringField(required=True)
     """
-    The image acquisition or processing technique, e.g. ``T1`` for a 
+    The image acquisition or processing technique, e.g. ``T1`` for a
     T1-weighted scan or 'ANTs' for an ANTs registration.
     
     The REST update client is responsible for ensuring that technique
@@ -163,7 +154,7 @@ class Protocol(mongoengine.Document):
     The image processing input parameter
     {*section*\ : {*option*\ : *value*\ }} dictionary,
     e.g.::
-
+        
         {
           'fsl.FLIRT': {'bins': 640, 'cost_func': 'normcorr'},
           'fsl.FNIRT' : {'in_fwhm': [10,6,2,2], 'ref_fwhm': [10,6,2,2]}
@@ -193,7 +184,7 @@ class RegistrationProtocol(Protocol):
     The image processing input parameter
     {*section*\ : {*option*\ : *value*\ }} dictionary,
     e.g.::
-
+        
         {
           'FLIRT': {'bins': 640, 'cost_func': 'normcorr'},
           'FNIRT' : {'in_fwhm': [10,6,2,2], 'ref_fwhm': [10,6,2,2]}
@@ -248,7 +239,7 @@ class Scan(ImageSequence):
     
     protocol = fields.ReferenceField(ScanProtocol, required=True)
     """The scan acquisition protocol."""
-
+    
     preview = fields.StringField()
     """
     The image file base name relative to the image store scan
@@ -275,16 +266,6 @@ class Scan(ImageSequence):
     """
     The registrations performed on the scan.
     """
-    
-    def clean(self):
-        """Verify that the bolus arrival index references a volume,."""
-        arv = self.bolus_arrival_index
-        if arv != None:
-            if not self.volumes:
-                raise ValidationError("Session does not have a volume")
-            if arv < 0 or arv >= len(self.volumes.images):
-                raise ValidationError(("Bolus arrival index does not refer"
-                                       " to a valid volume index: %d") % arv)
 
 
 class ModelingProtocol(Protocol):
@@ -300,14 +281,13 @@ class Modeling(Outcome):
     class ParameterResult(mongoengine.EmbeddedDocument):
         """The output for a given modeling run result parameter."""
         
-        name = fields.StringField(required=True)
+        image = fields.EmbeddedDocumentField(Image)
         """
         The voxel-wise mapping file name relative to the XNAT
-        modeling archive resource location.
+        modeling archive resource location. The image metadata
+        should include *average*, the average modeling result
+        value across all voxels.
         """
-        
-        average = fields.FloatField()
-        """The average parameter value over all voxels."""
         
         label_map = fields.EmbeddedDocumentField(LabelMap)
         """The label map overlay NIfTI file."""

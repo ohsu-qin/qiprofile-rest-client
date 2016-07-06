@@ -7,7 +7,7 @@ from qiprofile_rest_client.model.subject import (ImagingCollection, Subject)
 from qiprofile_rest_client.model.common import TumorExtent
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
-    LabelMap, SessionDetail, Image, Volumes, Point, Region, Modeling,
+    TimeSeries, LabelMap, SessionDetail, Image, Point, Region, Modeling,
     ModelingProtocol
 )
 from qiprofile_rest_client.model.clinical import (
@@ -17,8 +17,6 @@ from qiprofile_rest_client.model.clinical import (
     SarcomaPathology, FNCLCCGrade, NecrosisPercentValue,
     NecrosisPercentRange, necrosis_percent_as_score
 )
-
-VOLUME_TMPL = "volume%03d.nii.gz"
 
 
 class TestModel(object):
@@ -279,30 +277,6 @@ class TestModel(object):
         detail = SessionDetail(scans=[scan])
         detail.validate()
     
-    def test_bolus_arrival(self):
-        # The scan protocol.
-        protocol = database.get_or_create(ScanProtocol, dict(technique='T1'))
-        # The scan with a bogus bolus arrival.
-        scan = Scan(protocol=protocol, number=1, bolus_arrival_index=4)
-        # The bolus arrival index must refer to an existing volume.
-        with assert_raises(ValidationError):
-            scan.validate()
-        # The detail object.
-        detail = SessionDetail(scans=[scan])
-        with assert_raises(ValidationError):
-            detail.validate()
-    
-        # The scan images.
-        images = [Image(name=VOLUME_TMPL % i) for i in range(1, 32)]
-        scan.volumes = Volumes(name='NIFTI', images=images)
-        # The bolus arrival is now valid.
-        detail.validate()
-
-        # The bolus arrival index must refer to a volume.
-        scan.bolus_arrival_index = 32
-        with assert_raises(ValidationError):
-            detail.validate()
-    
     def test_registration(self):
         # The scan protocol.
         scan_pcl = database.get_or_create(ScanProtocol, dict(technique='T1'))
@@ -312,10 +286,10 @@ class TestModel(object):
         # The registration protocol.
         reg_pcl = database.get_or_create(RegistrationProtocol,
                                          dict(technique='FLIRT'))
-        # The registration images.
-        images = [Image(name=VOLUME_TMPL % i) for i in range(1, 32)]
-        volumes = Volumes(name='reg_test', images=images)
-        reg = Registration(protocol=reg_pcl, volumes=volumes)
+        # The registration time series.
+        time_series_img = Image(name='reg_ts.nii.gz')
+        time_series = TimeSeries(name='reg_ts', image=time_series_img)
+        reg = Registration(protocol=reg_pcl, time_series=time_series)
         reg.validate()
     
         # Validate the session detail and embedded scan registration.
@@ -333,14 +307,14 @@ class TestModel(object):
         scan.validate()
     
         # The ROI.
-        mask = 'lesion1.nii.gz'
+        centroid = Point(x=200, y=230, z=400)
+        intensity = 31
+        metadata = dict(centroid=centroid, average_intensity=intensity)
+        mask = Image(name='lesion1.nii.gz', metadata=metadata)
         label_map = LabelMap(name='lesion1_color.nii.gz',
                              color_table='color_table.nii.gz')
         label_map.validate()
-        centroid = Point(x=200, y=230, z=400)
-        intensity = 31
-        roi = Region(mask=mask, label_map=label_map, centroid=centroid,
-                     average_intensity=intensity)
+        roi = Region(mask=mask, resource='roi', label_map=label_map, centroid=centroid)
         roi.validate()
         
         # Validate the session detail and embedded scan ROI.
@@ -371,7 +345,8 @@ class TestModel(object):
         scan_pcl = database.get_or_create(ScanProtocol, dict(technique='T1'))
         source = Modeling.Source(scan=scan_pcl)
         # The modeling data.
-        ktrans = Modeling.ParameterResult(name='ktrans.nii.gz')
+        ktrans_img = Image(name='ktrans.nii.gz')
+        ktrans = Modeling.ParameterResult(image=ktrans_img)
         modeling = Modeling(protocol=mdl_pcl, source=source, resource='pk_01',
                             result=dict(ktrans=ktrans))
         modeling.validate()
