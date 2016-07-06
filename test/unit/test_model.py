@@ -2,15 +2,15 @@ from datetime import datetime
 from mongoengine import (connect, ValidationError)
 from nose.tools import (assert_true, assert_false, assert_equal,
                         assert_almost_equal, assert_raises)
-from qiprofile_rest_client.helpers import database
-from qiprofile_rest_client.model.subject import (ImagingCollection, Subject)
-from qiprofile_rest_client.model.common import TumorExtent
-from qiprofile_rest_client.model.imaging import (
+from qirest_client.helpers import database
+from qirest_client.model.subject import (ImagingCollection, Subject)
+from qirest_client.model.common import TumorExtent
+from qirest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
     MultiImageResource, SingleImageResource, LabelMap, SessionDetail,
     Image, Point, Region, Modeling, ModelingProtocol
 )
-from qiprofile_rest_client.model.clinical import (
+from qirest_client.model.clinical import (
     Biopsy, Evaluation, Surgery, PathologyReport, TumorLocation,
     TNM, BreastSurgery, BreastPathology, ResidualCancerBurden,
     ModifiedBloomRichardsonGrade, HormoneReceptorStatus,
@@ -21,7 +21,7 @@ from qiprofile_rest_client.model.clinical import (
 
 class TestModel(object):
     """
-    Basic data model test. A more complete test is found in the qiprofile_rest
+    Basic data model test. A more complete test is found in the qirest
     server TestSeed test suite.
     """
     def setup(self):

@@ -24,14 +24,14 @@ def readme():
 
 
 setup(
-    name = 'qiprofile-rest-client',
-    version = version('qiprofile_rest_client'),
+    name = 'qirest-client',
+    version = version('qirest_client'),
     author = 'OHSU Knight Cancer Institute',
     author_email = 'loneyf@ohsu.edu',
     packages = find_packages(),
     include_package_data = True,
     scripts = glob.glob('bin/*'),
-    url = 'http://qiprofile-rest-client.readthedocs.org/en/latest/',
+    url = 'http://qirest-client.readthedocs.org/en/latest/',
     description = 'Quantitative Imaging Profile REST client',
     long_description = readme(),
     classifiers = [

@@ -1,4 +1,4 @@
-from qiprofile_rest_client import choices
+from qirest_client import choices
 from nose.tools import assert_equal
 
 class TestChoices(object):

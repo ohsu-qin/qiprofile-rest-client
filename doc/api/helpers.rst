@@ -3,8 +3,8 @@ helpers
 
 :mod:`helpers Package`
 --------------------
-.. automodule:: qiprofile_rest_client.helpers
+.. automodule:: qirest_client.helpers
 
 :mod:`database`
 ------------
-.. automodule:: qiprofile_rest_client.helpers.database
+.. automodule:: qirest_client.helpers.database

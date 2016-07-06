@@ -4,4 +4,4 @@ choices
 
 :mod:`choices`
 --------------
-.. automodule:: qiprofile_rest_client.choices
+.. automodule:: qirest_client.choices

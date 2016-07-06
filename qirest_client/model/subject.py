@@ -85,7 +85,7 @@ class Subject(mongoengine.Document):
     @property
     def sessions(self):
         """
-        :return: the :class:`qiprofile_rest_client.imaging.Session`
+        :return: the :class:`qirest_client.imaging.Session`
             encounters
         """
         return (enc for enc in self.encounters if self._is_session(enc))
@@ -103,7 +103,7 @@ class Subject(mongoengine.Document):
     @property
     def clinical_encounters(self):
         """
-        :return: the non-:class:`qiprofile_rest_client.imaging.Session`
+        :return: the non-:class:`qirest_client.imaging.Session`
             encounters
         """
         return (enc for enc in self.encounters if not self._is_session(enc))

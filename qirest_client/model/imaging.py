@@ -251,7 +251,7 @@ class Scan(ImageSequence):
     """
     The image regions of interest. For a scan with ROIs, there is
     one ROI per scan tumor. The rois list order is the same as the
-    :class:`qiprofile-rest-client.model.clinical.PathologyReport`
+    :class:`qirest-client.model.clinical.PathologyReport`
     ``tumors`` list order.
     """
     
@@ -367,7 +367,7 @@ class Modeling(Outcome):
     then a REST database update client might calculate the average |Ktrans|
     and |chisq| values and populate the REST database as follows::
         
-        from qiprofile_rest_client.helpers import database
+        from qirest_client.helpers import database
         t1 = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
         tofts = database.get_or_create(ModelingProtocol,
                                        dict(technique='Tofts'))

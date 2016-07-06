@@ -28,7 +28,7 @@ def roman_range_choices(start, stop):
      
     Example:
 
-    >>> from qiprofile_rest_client import choices
+    >>> from qirest_client import choices
     >>> choices.roman_range_choices(1, 5)
     [('I', 1), ('II', 2), ('III', 3), ('IV', 4)]
     

@@ -564,7 +564,7 @@ class PathologyReport(Evaluation):
     tumors = fields.ListField(fields.EmbeddedDocumentField(TumorPathology))
     """
     The tumor pathology findings. The tumors list order is
-    the same as the :class:`qiprofile-rest-client.model.imaging.Scan`
+    the same as the :class:`qirest-client.model.imaging.Scan`
     ``rois`` list order. The most significant tumor is preferably
     listed first.
     """

@@ -4,28 +4,28 @@ model
 
 :mod:`model Package`
 --------------------
-.. automodule:: qiprofile_rest_client.model
+.. automodule:: qirest_client.model
 
 :mod:`admin`
 ------------
-.. automodule:: qiprofile_rest_client.model.admin
+.. automodule:: qirest_client.model.admin
 
 :mod:`clinical`
 ---------------
-.. automodule:: qiprofile_rest_client.model.clinical
+.. automodule:: qirest_client.model.clinical
 
 :mod:`imaging`
 --------------
-.. automodule:: qiprofile_rest_client.model.imaging
+.. automodule:: qirest_client.model.imaging
 
 :mod:`subject`
 --------------
-.. automodule:: qiprofile_rest_client.model.subject
+.. automodule:: qirest_client.model.subject
 
 :mod:`uom`
 ----------
-.. automodule:: qiprofile_rest_client.model.uom
+.. automodule:: qirest_client.model.uom
 
 :mod:`facade`
 -------------
-.. automodule:: qiprofile_rest_client.model.facade
+.. automodule:: qirest_client.model.facade
