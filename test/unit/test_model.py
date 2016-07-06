@@ -7,8 +7,8 @@ from qiprofile_rest_client.model.subject import (ImagingCollection, Subject)
 from qiprofile_rest_client.model.common import TumorExtent
 from qiprofile_rest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
-    TimeSeries, LabelMap, SessionDetail, Image, Point, Region, Modeling,
-    ModelingProtocol
+    MultiImageResource, SingleImageResource, LabelMap, SessionDetail,
+    Image, Point, Region, Modeling, ModelingProtocol
 )
 from qiprofile_rest_client.model.clinical import (
     Biopsy, Evaluation, Surgery, PathologyReport, TumorLocation,
@@ -286,10 +286,13 @@ class TestModel(object):
         # The registration protocol.
         reg_pcl = database.get_or_create(RegistrationProtocol,
                                          dict(technique='FLIRT'))
+        # The registration volumes.
+        vol_imgs = [Image(name="volume00%s.nii.gz" % vol) for vol in range(1, 4)]
+        volumes = MultiImageResource(name='reg', images=vol_imgs)
         # The registration time series.
         time_series_img = Image(name='reg_ts.nii.gz')
-        time_series = TimeSeries(name='reg_ts', image=time_series_img)
-        reg = Registration(protocol=reg_pcl, time_series=time_series)
+        time_series = SingleImageResource(name='reg_ts', image=time_series_img)
+        reg = Registration(protocol=reg_pcl, volumes=volumes, time_series=time_series)
         reg.validate()
     
         # Validate the session detail and embedded scan registration.

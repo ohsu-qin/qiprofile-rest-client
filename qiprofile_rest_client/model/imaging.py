@@ -113,21 +113,16 @@ class MultiImageResource(Resource):
     """The resource images."""
 
 
-class TimeSeries(SingleImageResource):
-    """
-    The time series resource. This resource includes a
-    4D:class:`Image`
-    """
-    pass
-
-
 class ImageSequence(Outcome):
     """The Scan or Registration."""
     
     meta = dict(allow_inheritance=True)
     
-    time_series = fields.EmbeddedDocumentField(TimeSeries)
+    time_series = fields.EmbeddedDocumentField(SingleImageResource)
     """The 4D time series resource."""
+    
+    volumes = fields.EmbeddedDocumentField(MultiImageResource)
+    """The 3D volumes resource."""
 
 
 class Protocol(mongoengine.Document):
