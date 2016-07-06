@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+6.1.1 / 2016-07-06
+------------------
+* Replace TimeSeries and Volumes by resources.
+
 5.12.1 / 2016-03-18
 -------------------
 * Make TimeSeries and Volumes Resource subclasses.
