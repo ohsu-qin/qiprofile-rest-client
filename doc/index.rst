@@ -5,8 +5,8 @@ qirest-client: Quantitative Imaging Profile REST client
 ********
 Synopsis
 ********
-The Quantitative Imaging Profile (*QuIP*) REST client interacts with
-the `QuIP REST server`_.
+The Quantitative Imaging Profile (*QiPr*) REST client interacts with
+the `qiprofile REST server`_.
 
 :API: https://qirest-client.readthedocs.org/en/latest/api/index.html
 
@@ -16,21 +16,21 @@ the `QuIP REST server`_.
 ************
 Installation
 ************
-1. Install the `QuIP REST server`_.
+1. Install the `qiprofile REST server`_.
 
 2. Add ``qirest-client`` to your Python_ project setup.py
    ``install_requires``.
 
 3. Update your project installation to reflect the REST client dependency.
 
-4. Start the `QuIP REST server`_.
+4. Start the `qiprofile REST server`_.
 
 
 *****
 Usage
 *****
 
-See the `QuIP REST Data Model`_ and API documentation.
+See the `qiprofile REST Data Model`_ and API documentation.
 
 
 ***********
@@ -64,9 +64,9 @@ to GitHub. Documentation can be generated locally as follows:
 
 .. _Python: http://www.python.org
 
-.. _QuIP REST Data Model: http://qirest-client.readthedocs.org/en/latest/data_model.html
+.. _qiprofile REST Data Model: http://qirest-client.readthedocs.org/en/latest/data_model.html
 
-.. _QuIP REST server: http://qirest.readthedocs.org/en/latest/
+.. _qiprofile REST server: http://qirest.readthedocs.org/en/latest/
 
 .. _ReadTheDocs: https://www.readthedocs.org
 

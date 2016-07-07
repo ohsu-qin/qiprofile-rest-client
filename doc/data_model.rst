@@ -1,5 +1,5 @@
 *****************************************************
-Quantitative Imaging Profile (*QuIP*) REST Data Model
+Quantitative Imaging Profile (*QiPr*) REST Data Model
 *****************************************************
 
 .. image:: /images/data_model.svg
