@@ -3,7 +3,7 @@ from mongoengine import (connect, ValidationError)
 from nose.tools import (assert_true, assert_false, assert_equal,
                         assert_almost_equal, assert_raises)
 from qirest_client.helpers import database
-from qirest_client.model.subject import (ImagingCollection, Subject)
+from qirest_client.model.subject import (Project, ImagingCollection, Subject)
 from qirest_client.model.common import TumorExtent
 from qirest_client.model.imaging import (
     Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
@@ -31,16 +31,23 @@ class TestModel(object):
     def tearDown(self):
         self._connection.drop_database('qiprofile_test')
 
-    def test_collection(self):
-        coll = ImagingCollection()
-        # The collection must have a project.
+    def test_project(self):
+        prj = Project()
+        # The project must have a name.
         with assert_raises(ValidationError):
-            coll.validate()
-        coll.project = 'QIN_Test'
+            prj.validate()
+        prj.name = 'Breast'
+        prj.validate()
+
+    def test_collection(self):
         # The collection must have a name.
         with assert_raises(ValidationError):
-            coll.validate()
-        coll.name = 'Breast'
+            ImagingCollection(project='QIN_Test').validate()
+        # The collection must have a project.
+        with assert_raises(ValidationError):
+            ImagingCollection(name='Breast').validate()
+        # A valid collection.
+        coll = ImagingCollection(project='QIN_Test', name='Breast')
         coll.validate()
 
     def test_subject(self):

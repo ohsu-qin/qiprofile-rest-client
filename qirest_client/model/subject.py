@@ -11,6 +11,18 @@ from .imaging import (Scan, Session)
 from .clinical import Treatment
 
 
+class Project(mongoengine.Document):
+    """The imaging project."""
+
+    meta = dict(collection='qiprofile_project')
+
+    name = fields.StringField(required=True)
+    """The required project name."""
+
+    description = fields.StringField()
+    """The optional short description."""
+
+
 class ImagingCollection(mongoengine.Document):
     """The imaging collection."""
 
@@ -23,7 +35,7 @@ class ImagingCollection(mongoengine.Document):
     """The required collection name."""
 
     description = fields.StringField()
-    """The required short description."""
+    """The optional short description."""
 
     url = fields.StringField()
     """The hyperlink url to additional information."""

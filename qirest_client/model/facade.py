@@ -13,7 +13,7 @@ SESS_REGEX = re.compile('^Session(\d+)$')
 
 def find_subject(project, subject, create=False):
     """
-    Finds the given QuIP subject. If it doesn't exists
+    Finds the given qiprofile subject. If it doesn't exists
     and the *create* flag is set, then the subject is created.
 
     :param project: the project name
@@ -42,7 +42,7 @@ def find_subject(project, subject, create=False):
 
 def find_session(project, subject, session, create=False):
     """
-    Finds the given QuIP subject. If it doesn't exists
+    Finds the given qiprofile subject. If it doesn't exists
     and the *create* flag is set, then the session is created.
 
     :param project: the project name
@@ -73,7 +73,7 @@ def find_session(project, subject, session, create=False):
 
 def save_subject(project, subject, **opts):
     """
-    Creates the QuIP subject, if necessary, and updates
+    Creates the qiprofile subject, if necessary, and updates
     the given subject fields.
 
     :param project: the project name
