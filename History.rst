@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+6.2.1 / 2016-07-14
+------------------
+* Add Project.
+
 6.1.2 / 2016-07-06
 ------------------
 * Rename from qiprofile-rest-client to qirest-client.
