@@ -72,6 +72,9 @@ class Subject(mongoengine.Document):
     birth_date = fields.DateTimeField()
     """The subject date of birth, anonymized to July 7 for deidentified data."""
 
+    diagnosis_date = fields.DateTimeField()
+    """The date of the first recorded lesion diagnosis."""
+
     races = fields.ListField(
         fields.StringField(
             max_length=choices.max_length(RACE_CHOICES),
