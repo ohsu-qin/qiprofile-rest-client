@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+6.2.2 / 2016-10-16
+------------------
+* Add diagnosis date.
+
 6.2.1 / 2016-07-14
 ------------------
 * Add Project.
