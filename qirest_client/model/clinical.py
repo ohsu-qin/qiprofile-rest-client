@@ -53,12 +53,12 @@ class Dosage(mongoengine.EmbeddedDocument):
     """
     The cumulative amount of the agent administered over the
     course of the duration, normalized by weight.
-    
+
     For chemotherapy, the field unit is milligrams per kilogram
     (mg/kg).
-    
+
     For radiotherapy, the field unit is Greys per kilogram (Gy/kg).
-    
+
     Radiation fractions and daily chemotherapy dosages are not tracked.
     """
 
@@ -138,7 +138,7 @@ def necrosis_percent_as_score(necrosis_percent):
     * Otherwise, if the percent is 0, then 0
     * Otherwise, if the percent is less than 50, then 1
     * Otherwise, 2
-    
+
     :param necrosis_percent: the integer percent,
         :class:`NecrosisPercentValue` or  :class:`NecrosisPercentRange`
     :return: the necrosis score
@@ -189,10 +189,10 @@ class NecrosisPercentValue(NecrosisPercent):
 class NecrosisPercentRange(NecrosisPercent):
     """
     The necrosis percent range.
-    
+
     :Note: it is recommended, although not required, that the percent
         range is a decile range, e.g. [20-30].
-    
+
     :Note: A range which spans 50%, e.g. [40-60], results in a
         :meth:`necrosis_percent_as_score` ValidationError.
     """
@@ -223,7 +223,7 @@ class NecrosisPercentRange(NecrosisPercent):
     start = fields.EmbeddedDocumentField(LowerBound)
 
     stop = fields.EmbeddedDocumentField(UpperBound)
-    
+
     def __repr__(self):
         return "%d-%d" % (self.start, self.stop)
 
@@ -300,7 +300,7 @@ class TNM(Outcome):
         """
         """
         The tumor size pattern.
-        
+
         Examples:
         * ``T3``
         * ``pT2`` - pathology prefix
@@ -380,7 +380,7 @@ class TNM(Outcome):
             if not match:
                 raise ValidationError("TNM Size value is not supported:"
                                       " %s" % value)
-            
+
             return klass(**match.groupdict())
 
         def clean(self):
@@ -455,7 +455,9 @@ class HormoneReceptorStatus(Outcome):
 
 
 class BreastNormalizedAssayField(fields.IntField):
-    """The normalized Breast genomics result in the inclusive range [0, 15]."""
+    """
+    The normalized Breast genomics result in the inclusive range [0, 15].
+    """
 
     def validate(self, value, clean=True):
         return value > 0 and value <= 15
@@ -535,7 +537,7 @@ class TumorLocation(mongoengine.EmbeddedDocument):
     body_part = fields.StringField()
     """
     The capitalized body part, e.g. ``Thigh``.
-    
+
     This field is only required when the tumor type is not localized
     to a body part, e.g. sarcoma.
     """
@@ -553,7 +555,7 @@ class TumorPathology(mongoengine.EmbeddedDocument):
     location = fields.EmbeddedDocumentField(TumorLocation)
 
     tnm = fields.EmbeddedDocumentField(TNM)
-    
+
     extent = fields.EmbeddedDocumentField(TumorExtent)
     """The primary tumor bed volume measured by the pathologist."""
 
@@ -626,13 +628,13 @@ class BreastPathology(TumorPathology):
         node_factor =  math.pow(node_base, 0.17)
 
         # The RCB index is the sum of the invasion and node components.
-        return invasion_factor + node_factor 
+        return invasion_factor + node_factor
 
     def rcb_class(self, rcb_index):
         """
         Returns the RCB class per the cut-offs defined in
         `JCO 25:28 4414-4422 <http://jco.ascopubs.org/content/25/28/4414.full>`_.
-        
+
         :param rcb_index: the :meth:`rcb_index` value
         """
         if rcb_index == 0:
