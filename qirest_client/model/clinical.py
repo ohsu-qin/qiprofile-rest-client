@@ -595,7 +595,7 @@ class ResidualCancerBurden(mongoengine.EmbeddedDocument):
 
 
 class BreastPathology(TumorPathology):
-    """The QIN breast patient pathology summary."""
+    """The breast patient pathology summary."""
 
     hormone_receptors = fields.ListField(
         field=mongoengine.EmbeddedDocumentField(HormoneReceptorStatus)
@@ -648,7 +648,7 @@ class BreastPathology(TumorPathology):
 
 
 class SarcomaPathology(TumorPathology):
-    """The QIN sarcoma patient pathology summary."""
+    """The sarcoma patient pathology summary."""
 
     HISTOLOGY_CHOICES = ('Carcinosarcoma', 'Cerebellar', 'Chondrosarcoma',
                          'Clear Cell', 'Dermatofibrosarcoma', 'Fibrosarcoma',
