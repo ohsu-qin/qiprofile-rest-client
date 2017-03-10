@@ -127,15 +127,15 @@ class ImageSequence(Outcome):
 
 class Protocol(mongoengine.Document):
     """
-    The image processing protocol abstract class.
+    The image acquisition or processing protocol abstract class.
     """
 
     meta = dict(allow_inheritance=True, collection='qiprofile_protocol')
 
     technique = fields.StringField(required=True)
     """
-    The image acquisition or processing technique, e.g. ``T1`` for a
-    T1-weighted scan or 'ANTs' for an ANTs registration.
+    The acquisition or processing technique, e.g. ``T1`` for a
+    T1-weighted scan or ``ANTs`` for an ANTs registration.
 
     The REST update client is responsible for ensuring that technique
     synonyms resolve to the same technique value, e.g. scans with
@@ -146,7 +146,7 @@ class Protocol(mongoengine.Document):
 
     configuration = fields.DictField()
     """
-    The image acquisition or processing input parameter
+    The acquisition or processing input parameter
     {*section*\ : {*option*\ : *value*\ }} dictionary,
     e.g.::
 
@@ -170,6 +170,7 @@ class Protocol(mongoengine.Document):
 
 class RegistrationProtocol(Protocol):
     """The scan registration protocol."""
+    pass
 
 
 class Registration(ImageSequence):
@@ -272,7 +273,7 @@ class Modeling(Outcome):
         abstract superclass of ScanProtocol and RegistrationProtocol.
         This Source embedded document introduces a disambiguation
         level by creating a disjunction object that can either hold
-        a *scan reference or a *registration* reference.
+        a *scan* reference or a *registration* reference.
         """
 
         scan = fields.ReferenceField(ScanProtocol)
@@ -400,7 +401,19 @@ class Session(Encounter):
     """The tumor extents measured from the scan."""
 
     preview = fields.EmbeddedDocumentField(SingleImageResource)
-    """The scan graphical display preview image resource."""
+    """
+    The scan graphical display preview image resource object.
+    The preview is a a Session resource rather than a Scan
+    resource so that the client does not need to load the
+    SessionDetail in order to access the preview image.
+    """
+
+    acquisition_parameters = fields.DictField;
+    """
+    The image acquisition parameters dictionary.
+    The dictionary includes DICOM metadata that is common to
+    all of the captured scan images.
+    """
 
     detail = fields.ReferenceField(SessionDetail)
     """The session detail reference."""
