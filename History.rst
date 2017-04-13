@@ -1,6 +1,10 @@
 This history lists major release themes. See the GitHub commits
 for change details.
 
+6.2.4 / 2017-04-13
+------------------
+* Protocols are no longer sub-typed.
+
 6.2.3 / 2016-12-16
 ------------------
 * Add session preview.
