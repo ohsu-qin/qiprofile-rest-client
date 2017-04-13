@@ -6,9 +6,9 @@ from qirest_client.helpers import database
 from qirest_client.model.subject import (Project, ImagingCollection, Subject)
 from qirest_client.model.common import TumorExtent
 from qirest_client.model.imaging import (
-    Session, Scan, ScanProtocol, Registration, RegistrationProtocol,
+    Session, Scan, Registration, Protocol,
     MultiImageResource, SingleImageResource, LabelMap, SessionDetail,
-    Image, Point, Region, Modeling, ModelingProtocol
+    Image, Point, Region, Modeling
 )
 from qirest_client.model.clinical import (
     Biopsy, Evaluation, Surgery, PathologyReport, TumorLocation,
@@ -65,32 +65,32 @@ class TestModel(object):
             subject.validate()
         subject.collection = 'Breast'
         subject.validate()
-    
+
     def test_race(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         subject.races = ['White', 'Black', 'Asian', 'AIAN', 'NHOPI']
         subject.validate()
-    
+
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         subject.races = ['Invalid']
         with assert_raises(ValidationError):
             subject.validate()
-    
+
         # Races must be a list.
         subject.races = 'White'
         with assert_raises(ValidationError):
             subject.validate()
-    
+
     def test_ethnicity(self):
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
         subject.ethnicity = 'Non-Hispanic'
         subject.validate()
-    
+
         # The ethnicity is a controlled value.
         subject.ethnicity = 'Invalid'
         with assert_raises(ValidationError):
             subject.validate()
-    
+
     def test_breast_biopsy(self):
         """
         This Breast biopsy test case is a variation of the Breast
@@ -154,7 +154,7 @@ class TestModel(object):
         for expected, rcb_index in enumerate((0, 1.2, 1.4, 3.5)):
             actual = path.rcb_class(rcb_index)
             assert_equal(actual, expected,
-                         "The RCB class of RCB index %f is incorrect: %d" % 
+                         "The RCB class of RCB index %f is incorrect: %d" %
                         (rcb_index, actual))
 
     def test_breast_surgery(self):
@@ -185,10 +185,10 @@ class TestModel(object):
         surgery.validate()
         subject.encounters = [surgery]
         subject.validate()
-    
+
     def test_sarcoma_surgery(self):
         subject = Subject(project='QIN_Test', collection='Sarcoma', number=1)
-        
+
         # The pathology report.
         size = TNM.Size.parse('T3a')
         size.validate()
@@ -214,7 +214,7 @@ class TestModel(object):
         surgery.validate()
         subject.encounters = [surgery]
         subject.validate()
-    
+
     def test_tnm_size(self):
         for value in ['T1', 'Tx', 'cT4', 'T1b', 'cT2a']:
             size = TNM.Size.parse(value)
@@ -247,11 +247,11 @@ class TestModel(object):
                 assert_equal(actual, expected,
                              "The necrosis score for %s is incorrect: %d" %
                              (in_val, expected))
-    
+
     def test_treatment(self):
        # TODO - add the treatment test case.
        pass
-    
+
     def test_session(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
@@ -261,7 +261,7 @@ class TestModel(object):
         session.validate()
         subject.encounters = [session]
         subject.validate()
-    
+
     def test_add_encounter(self):
         # The test subject.
         subject = Subject(project='QIN_Test', collection='Breast', number=1)
@@ -273,25 +273,25 @@ class TestModel(object):
         assert_equal(subject.encounters, encounters[0:2])
         subject.add_encounter(encounters[2])
         assert_equal(subject.encounters, encounters)
-    
+
     def test_scan(self):
         # The scan protocol.
-        protocol = database.get_or_create(ScanProtocol, dict(technique='T1'))
+        protocol = database.get_or_create(Protocol, dict(technique='T1'))
         # The scan.
         scan = Scan(protocol=protocol, number=1)
         scan.validate()
         # Validate the session detail embedded scan.
         detail = SessionDetail(scans=[scan])
         detail.validate()
-    
+
     def test_registration(self):
         # The scan protocol.
-        scan_pcl = database.get_or_create(ScanProtocol, dict(technique='T1'))
+        scan_pcl = database.get_or_create(Protocol, dict(technique='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
         scan.validate()
         # The registration protocol.
-        reg_pcl = database.get_or_create(RegistrationProtocol,
+        reg_pcl = database.get_or_create(Protocol,
                                          dict(technique='FLIRT'))
         # The registration volumes.
         vol_imgs = [Image(name="volume00%s.nii.gz" % vol) for vol in range(1, 4)]
@@ -301,21 +301,21 @@ class TestModel(object):
         time_series = SingleImageResource(name='reg_ts', image=time_series_img)
         reg = Registration(protocol=reg_pcl, volumes=volumes, time_series=time_series)
         reg.validate()
-    
+
         # Validate the session detail and embedded scan registration.
         scan.registrations = [reg]
         detail = SessionDetail(scans=[scan])
         detail.scans = [scan]
         detail.validate()
-    
+
     def test_roi(self):
         # The scan protocol.
-        scan_pcl = database.get_or_create(ScanProtocol,
+        scan_pcl = database.get_or_create(Protocol,
                                           dict(technique='T1'))
         # The scan.
         scan = Scan(protocol=scan_pcl, number=1)
         scan.validate()
-    
+
         # The ROI.
         centroid = Point(x=200, y=230, z=400)
         intensity = 31
@@ -326,19 +326,19 @@ class TestModel(object):
         label_map.validate()
         roi = Region(mask=mask, resource='roi', label_map=label_map, centroid=centroid)
         roi.validate()
-        
+
         # Validate the session detail and embedded scan ROI.
         scan.rois = [roi]
         detail = SessionDetail(scans=[scan])
         detail.scans = [scan]
         detail.validate()
-    
+
     def test_modeling_protocol(self):
         # The modeling protocol content.
         cfg = {'Fastfit': {'model_name': 'fxr.model'},
                'R1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
         mdl_pcl_key = dict(technique='BOLERO', configuration=cfg)
-        mdl_pcl = database.get_or_create(ModelingProtocol, mdl_pcl_key)
+        mdl_pcl = database.get_or_create(Protocol, mdl_pcl_key)
         assert_equal(mdl_pcl.configuration, cfg,
                      "The fetched modeling configuration is incorrect: %s" %
                      mdl_pcl.configuration)
@@ -350,9 +350,9 @@ class TestModel(object):
         cfg = {'Fastfit': {'model_name': 'fxr.model'},
                'R1': {'r1_0_val': 0.7, 'baseline_end_idx': 1}}
         mdl_pcl_key = dict(technique='BOLERO', configuration=cfg)
-        mdl_pcl = database.get_or_create(ModelingProtocol, mdl_pcl_key)
+        mdl_pcl = database.get_or_create(Protocol, mdl_pcl_key)
         # The source protocol.
-        scan_pcl = database.get_or_create(ScanProtocol, dict(technique='T1'))
+        scan_pcl = database.get_or_create(Protocol, dict(technique='T1'))
         source = Modeling.Source(scan=scan_pcl)
         # The modeling data.
         ktrans_img = Image(name='ktrans.nii.gz')

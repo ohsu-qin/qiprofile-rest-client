@@ -142,6 +142,38 @@ class Protocol(mongoengine.Document):
     descriptions including ``T1`` and ``T1 AXIAL`` should both resolve
     to technique ``T1``. The acquisition and processing details are
     stored in the configuration rather than embedded in the technique.
+
+    Protocol common constraints
+    ---------------------------
+
+    Clients are required to enforce the following constraints:
+
+    * Protocols are unique and immutable. Clients are required
+      to search for an existing protocol with the same content prior
+      to creating a new ``Protocol`` database object.
+
+    * Protocol techniques are disjoint by referencing class, i.e.
+      a technique value cannot occur in protocol database objects
+      referenced by instances of different classes. For example,
+      a `Registration`` instance cannot reference a protocol
+      with technique ``T2``, since that is a scan protocol reserved
+      technique per the specialization constraints below.
+
+    Protocol specialization constraints
+    -----------------------------------
+
+    **Scan**
+
+    Scans with the same protocol and image dimensions are directly
+    comparable, e.g. in comparing modeling results across subjects
+    or sessions.
+
+    The recommended technique controlled values include, but are not
+    limited to, the following:
+    * ``T1`` - T1-weighted
+    * ``T2`` - T2-weighted
+    * ``DW`` - diffusion-weighted
+    * ``PD`` - proton density
     """
 
     configuration = fields.DictField()
@@ -168,34 +200,13 @@ class Protocol(mongoengine.Document):
     """
 
 
-class RegistrationProtocol(Protocol):
-    """The scan registration protocol."""
-    pass
-
-
 class Registration(ImageSequence):
     """
     The patient image registration that results from processing a scan.
     """
 
-    protocol = fields.ReferenceField(RegistrationProtocol, required=True)
+    protocol = fields.ReferenceField(Protocol, required=True)
     """The registration protocol."""
-
-
-class ScanProtocol(Protocol):
-    """
-    The scan acquisition protocol. Scans with the same protocol
-    and image dimensions are directly comparable, e.g. in comparing
-    modeling results across subjects or sessions.
-
-    The recommended technique controlled values include, but are not
-    limited to, the following:
-    * ``T1`` - T1-weighted
-    * ``T2`` - T2-weighted
-    * ``DW`` - diffusion-weighted
-    * ``PD`` - proton density
-    """
-    pass
 
 
 class Scan(ImageSequence):
@@ -210,7 +221,7 @@ class Scan(ImageSequence):
     identified by a number unique within the session.
     """
 
-    protocol = fields.ReferenceField(ScanProtocol, required=True)
+    protocol = fields.ReferenceField(Protocol, required=True)
     """The scan acquisition protocol."""
 
     bolus_arrival_index = fields.IntField()
@@ -233,11 +244,6 @@ class Scan(ImageSequence):
     """
     The registrations performed on the scan.
     """
-
-
-class ModelingProtocol(Protocol):
-    """The pharmicokinetic modeling protocol."""
-    pass
 
 
 class Modeling(Outcome):
@@ -267,20 +273,21 @@ class Modeling(Outcome):
         * mongoengine does not allow heterogeneous collections, i.e.
           a domain model Document subclass cannot have subclasses.
           Furthermore, the domain model Document class cannot be
-          an inner class, e.g. ModelingProtocol.
+          an inner class.
 
         Consequently, the Modeling.source field cannot represent an
-        abstract superclass of ScanProtocol and RegistrationProtocol.
-        This Source embedded document introduces a disambiguation
-        level by creating a disjunction object that can either hold
-        a *scan* reference or a *registration* reference.
+        abstract superclass with subclasses RegistrationSource
+        and ScanSource. The work-around is to introduce this Source
+        embedded document disambiguation by creating a disjunction
+        object that can either hold a *scan* reference or a
+        *registration* reference.
         """
 
-        scan = fields.ReferenceField(ScanProtocol)
+        scan = fields.ReferenceField(Protocol)
 
-        registration = fields.ReferenceField(RegistrationProtocol)
+        registration = fields.ReferenceField(Protocol)
 
-    protocol = fields.ReferenceField(ModelingProtocol, required=True)
+    protocol = fields.ReferenceField(Protocol, required=True)
     """The modeling protocol."""
 
     source = fields.EmbeddedDocumentField(Source, required=True)
@@ -309,7 +316,7 @@ class Modeling(Outcome):
 
     - *result* is the corresponding :class:`ParameterResult`
 
-    The parameters are determined by the :class:`ModelingProtocol`
+    The parameters are determined by the :class:`Protocol`
     technique. For example, the `OHSU QIN modeling workflow`_ includes
     the following outputs for the FXL (`Tofts standard`_) model and the
     FXR (`shutter speed`_) model:
@@ -340,9 +347,12 @@ class Modeling(Outcome):
     and |chisq| values and populate the REST database as follows::
 
         from qirest_client.helpers import database
-        t1 = database.get_or_create(ScanProtocol, dict(scan_type='T1'))
-        tofts = database.get_or_create(ModelingProtocol,
+        // The scan protocol.
+        t1 = database.get_or_create(Protocol, dict(scan_type='T1'))
+        // The modeling protocol.
+        tofts = database.get_or_create(Protocol,
                                        dict(technique='Tofts'))
+        // The modeling results.
         ktrans_label_map = LabelMap(filename='k_trans_overlay.nii.gz',
                                     color_table='jet.txt')
         ktrans = Modeling.ParameterResult(name='k_trans.nii.gz',
@@ -354,6 +364,7 @@ class Modeling(Outcome):
                                          average=chi_sq_avg,
                                          label_map=chisq_label_map)
         result = dict(ktrans=ktrans, chisq=chisq)
+        // The modeling object.
         session.modeling = Modeling(protocol=tofts, source=t1,
                                     resource='pk_h7Jtl', result=result)
 
